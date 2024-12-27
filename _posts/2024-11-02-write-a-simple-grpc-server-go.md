@@ -1,6 +1,6 @@
 ## Write a simple gRPC server in go in 5 minutes
 
-This article explains how to create a simple gRPC server in Go. It covers defining a service in a .proto file, generating Go code using protoc, implementing the server, and running it. Ideal for beginners, the guide provides clear, step-by-step instructions to quickly set up a basic gRPC server in Go.
+How to spin up a basic gRPC server in Go: Define your service in a .proto file, let protoc do the heavy lifting, implement the server, and hit run. Perfect for beginners—because everyone loves boilerplate, right? 🚀
 
 --
 
