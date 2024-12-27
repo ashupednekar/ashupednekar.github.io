@@ -4,51 +4,6 @@ This article explains how to create a simple gRPC server in Go. It covers defini
 
 --
 
-```html
-<style>
-.profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.profile img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profile-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #242424;
-}
-
-.meta {
-  font-size: 14px;
-  color: #6B6B6B;
-}
-</style>
-
-<a href="#" class="profile">
-  <img src="https://miro.medium.com/v2/resize:fill:88:88/1*M0elUzNjnLiz85r_IiqRcg.jpeg" alt="Ashu Pednekar">
-  <div class="profile-info">
-    <div class="name">Ashu Pednekar</div>
-    <div class="meta">4 min read · Nov 2, 2024</div>
-  </div>
-</a>
-
-```
-
 Simply place this code before your markdown content.
 
 ![](https://miro.medium.com/v2/resize:fit:1024/1*zm8YavW8_xKpwgHrYT3XIw.png)
