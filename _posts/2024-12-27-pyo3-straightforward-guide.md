@@ -20,7 +20,7 @@ We’re gonna:
 1. Write some 🔥 Rust code.
 2. Turn it into a shared library (.so for Linux folks, .dll for Windows weirdos).
 3. Slap some Python bindings on it (thanks, PyO3!).
-4. Marvel as your python code finally runs like a real piece of software should xD 
+4. Watch your Python code finally graduate from crawling like a toddler to sprinting like Usain Bolt
 
 
   
