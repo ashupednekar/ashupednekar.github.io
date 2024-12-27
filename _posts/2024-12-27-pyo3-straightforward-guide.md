@@ -1,8 +1,7 @@
 ## So you wanna speed up Python?
 
-Alright, buckle up, Pythonistas, because shared libraries are here to save the day! But forget C (because we’re not that masochistic), and say hello to Rust—our favorite mix of performance and sanity.
+Alright, buckle up, Pythonistas, because shared libraries are here to save the day! But forget C (because we’re not touched by the arcane), and say hello to Rust—our favorite mix of performance and sanity.
 
-  
 
 ## Why Rust?
 
