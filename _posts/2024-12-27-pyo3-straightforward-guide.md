@@ -78,7 +78,7 @@ fn sum_up_to(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 If you think this is complicated, take a look at this C code, that we had to do before, not to mention the amazing tooling by folks at pyo3
 
-```C
+```c
 #include <Python.h>
 
 // Function to compute the sum of two numbers and return it as a string.
