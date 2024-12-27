@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/2024-12-27-pyo3-straightforward-guide.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2024-12-27-pyo3-straightforward-guide"
+              "title": "README"
             }
           }
         ]
@@ -160,8 +160,10 @@
   },
   "active": "e423ba86d51549e2",
   "lastOpenFiles": [
-    "_posts/2024-11-02-write-a-simple-grpc-server-go.md",
     "_posts/2024-12-27-pyo3-straightforward-guide.md",
+    "/_posts/2024-12-27-pyo3-straightforward-guide.md",
+    "/assets/lib",
+    "_posts/2024-11-02-write-a-simple-grpc-server-go.md",
     "Untitled.md"
   ]
 }
