@@ -23,7 +23,8 @@ We’re gonna:
 
 3. Slap some Python bindings on it (thanks, PyO3!).
 
-4. Marvel as your Python code finally slithers quickly instead of dragging along 
+4. Marvel as your Python code finally runs like real programs should xD 
+
 
 
   
