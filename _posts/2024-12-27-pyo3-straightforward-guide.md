@@ -29,6 +29,7 @@ Jokes aside, we're gonna cover the following three scenarios
 
 Extra things you'll wanna do at some point
 - using classes, and limitations of `pymethods`
+- passing `PyObject`'s around tokio threads
 - accept `*args` and `**kwargs`
 - asyncio 😧?
 
