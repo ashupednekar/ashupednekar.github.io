@@ -27,6 +27,11 @@ Jokes aside, we're gonna cover the following three scenarios
 - accept python objects and run them from rust
 - import python code direcrty and run
 
+Extra things you'll wanna do at some point
+- using classes, and limitations of `pymethods`
+- accept `*args` and `**kwargs`
+- asyncio 😧?
+
 First off, we're gonna stick to pyo3 version 0.20.0 in this article, things change slightly in subsequent versions
 
 > first off, install maturin with `pip install maturin`  
