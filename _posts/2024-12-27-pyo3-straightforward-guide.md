@@ -37,7 +37,7 @@ First off, we're gonna stick to pyo3 version 0.20.0 in this article, things chan
 
 > first off, install maturin with `pip install maturin`  
 
-### Simple rust function called from python
+## Simple rust function called from python
 
 Let's go, start a fresh pyo3 project. We're just gonna sum numbers up to a given n, just to mock python for loop 😄
 
@@ -253,5 +253,54 @@ sum_up_to-0.1.0-cp312-cp312-macosx_11_0_arm64.whl
 ```
 
 It’s doing all the heavy lifting—compiling, packaging, integrating—so you can sit back and take the credit. Trust me, as your project gets bigger... you'll have to sit back a lot 😉
+
+## Let's use classes
+
+A class in python is complemented by structs in rust, with the `pyclass` and `pymethods` macros, here's how
+
+```rust
+#[pyclass]
+struct Add{
+    pub n: i32
+}
+
+#[pymethods]
+impl Add{
+    #[new]
+    fn new(n: i32) -> Self{
+        Self{n}
+    }
+
+    fn up_to(&self) -> PyResult<i32>{
+        Ok((1..=self.n).sum())
+    }
+}
+```
+
+There's no such thing as a constructor in the language as far as rust is concerned, you can have any function that returns `Self` act like one. Pyo3's `new` macro leverages the `new` convention and makes it the constructor when invoked from python
+
+Now update the module definition to include this class instead of a function
+
+```rust
+#[pymodule]
+fn sum_up_to(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<crate::Add>()?;
+    Ok(())
+}
+```
+
+### Compile and run :)
+
+Now compile with `maturin develop`, and it's ready to be used from python
+
+```python
+Python 3.12.7 (main, Oct  1 2024, 02:05:46) [Clang 16.0.0 (clang-1600.0.26.3)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from sum_up_to import Add
+>>> a = Add(1000000)
+>>> a.up_to()
+1784293664
+>>>
+```
 
 
