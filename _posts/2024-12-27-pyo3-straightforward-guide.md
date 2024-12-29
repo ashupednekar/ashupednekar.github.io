@@ -303,4 +303,20 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>>
 ```
 
+That’s it! 🎉 Now that you’ve got the PyO3 basics down, the next section will whisk you through the quirks of building distributed/async systems with PyO3. 🚀 Feel free to skim through it now or come back when you’re ready to dive deep! 😄
+
+---
+
+## Illustration: function runner
+
+Imagine your Python functions being automatically discovered and put to work by a background thread. Here’s how it goes:
+	1.	Mark Functions: Use a custom decorator to flag the functions you want to run.
+	2.	Worker Mode: At startup, a background worker thread initializes, ready to execute these flagged functions.
+	3.	User-Driven Execution: The main thread takes user input—a script file with function calls—and the worker handles the execution dynamically
+
+
+Before moving on to our python runner, let's cover some ground
+
+###  
+
 
