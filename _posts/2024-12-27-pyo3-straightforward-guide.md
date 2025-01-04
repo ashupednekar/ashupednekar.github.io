@@ -367,7 +367,7 @@ Once you have a `Py<T>`, you can safely pass it around threads! Use an `Arc` if 
 
 ### Working with the tokio reactor and async
 
-Async python, like rust have what's called colored functions, defined as `async def` and `async fn` respectively, which you can then await when needed. Before we proceed, here's a crude explanation of how async rust/ tokio works, I've posted another post diving deep into this, it's a work in progress but should help understand the gist of it. [Click here](https://ashupednekar) to read more.
+Async python, like rust have what's called colored functions, defined as `async def` and `async fn` respectively, which you can then await when needed. Before we proceed, here's a crude explanation of how async rust/ tokio works, I've posted another post diving deep into this, it's a work in progress but should help understand the gist of it. [Click here](https://ashupednekar.github.io/posts/understanding-collaborative-concurrency-async-green-threads-etc/) to read more.
 
 So bottom line, python asyncio is very different and messier than how tokio handles async. There are a few crates out there to support native async functions in python, like [py03-asyncio](https://crates.io/crates/pyo3-asyncio). For the context of this article, and most production use cases right now, I'd suggest going the following route instead. This works well if the bulk of the IO here is on the rust side of things.
 
@@ -421,7 +421,7 @@ fn mymodule(py: Python, m: &PyModule) -> PyResult<()> {
 }
 ```
 
-> note: you can always map the errors to python equivalents instead of panicking, but more on that later
+> note: you can always map the errors to python equivalents instead of panicking, but more on that in a future article, probably :)
 
 Few quirks to take care of
 - So the way the tokio runtime works, it keeps track of all tasks you've spawned, and checks their state periodically, so if you have something that blocks the runtime, like what we have here invoked from the runtime itself, it'll not work
@@ -440,5 +440,7 @@ task::block_in_place(move || {
 
 If you want to run more, refer to [tokio documentation](https://docs.rs/tokio/latest/tokio/task/fn.block_in_place.html), or this [github discussion](https://github.com/tokio-rs/tokio/pull/6738) in particular.
 
+---
 
+And that’s a wrap! Python and Rust are a powerhouse combo. By using Rust for performance-critical tasks, you can turbocharge your Python code without losing the flexibility and simplicity Python offers. It’s like having your cake and eating it too—fast, efficient, and still super easy to work with 🚀. So, why settle for slow when you can have the best of both worlds? 🏎️
 
