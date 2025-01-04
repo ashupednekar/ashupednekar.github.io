@@ -4,3 +4,4 @@ So.. The OS has threads right? These are lightweight equivalents to processes th
 
 So there's this elusive concept called green threads, which are managed in the user space, hence the overhead of spinning them up, pausing them and juggling work around 
 
+> P.S. These are just the starter points, will try to finish by next week :)
