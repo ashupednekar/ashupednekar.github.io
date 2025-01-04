@@ -363,5 +363,13 @@ fn create_python_object() -> PyResult<String> {
     })
 }
 ```
-
 Once you have a `Py<T>`, you can safely pass it around threads! Use an `Arc` if needed, allowing you to achieve "fearless concurrency" 🚀 even with Python objects. 🎉
+
+### Working with the tokio reactor and async
+
+Async python, like rust have what's called colored functions, defined as `async def` and `async fn` respectively, which you can then await when needed. Before we proceed, here's a crude explanation of how async rust/ tokio works, I've posted another post diving deep into this, it's a work in progress but should help understand the gist of it
+
+
+
+
+
