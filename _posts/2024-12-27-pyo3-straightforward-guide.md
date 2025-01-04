@@ -367,9 +367,78 @@ Once you have a `Py<T>`, you can safely pass it around threads! Use an `Arc` if 
 
 ### Working with the tokio reactor and async
 
-Async python, like rust have what's called colored functions, defined as `async def` and `async fn` respectively, which you can then await when needed. Before we proceed, here's a crude explanation of how async rust/ tokio works, I've posted another post diving deep into this, it's a work in progress but should help understand the gist of it
+Async python, like rust have what's called colored functions, defined as `async def` and `async fn` respectively, which you can then await when needed. Before we proceed, here's a crude explanation of how async rust/ tokio works, I've posted another post diving deep into this, it's a work in progress but should help understand the gist of it. [Click here](https://ashupednekar) to read more.
 
+So bottom line, python asyncio is very different and messier than how tokio handles async. There are a few crates out there to support native async functions in python, like [py03-asyncio](https://crates.io/crates/pyo3-asyncio). For the context of this article, and most production use cases right now, I'd suggest going the following route instead. This works well if the bulk of the IO here is on the rust side of things.
 
+- you have sync wrappers to python functions
+- start a tokio runtime in these functions
+- use `block_on` to get an `async` closure 
+- keep the rest of your rust codebase async, and call them from said closure
+
+This way, you don't have to bother with python asyncio and still reap the perks of the `tokio` runtime
+
+Here's an example
+
+```rust
+use pyo3::prelude::*;
+use tokio::runtime::Runtime;
+
+async fn consumer(cb: Py<PyObject>) -> PyResult<()> {
+  // This would usually be in a while let block or sth depending on your usecase
+  let func = cb.as_ref(py);
+  func.call0(py)?;
+  Ok(())
+}
+
+async fn produce(s: PyString) -> PyResult<()>{
+  // produce logic 
+  Ok(())
+}
+
+#[pyfunction]
+fn consumer(py: Python, callback: PyObject) -> PyResult<()> {
+  let rt = Runtime::new().unwrap();
+  rt.block_on(async {
+      consumer(callback).await
+  })
+}
+
+#[pyfunction]
+fn produce(_py: Python, s: PyString) -> PyResult<()> {
+  let rt = Runtime::new().unwrap();
+  rt.block_on(async {
+      produce(s).await;
+      Ok(())
+  })
+}
+
+#[pymodule]
+fn mymodule(py: Python, m: &PyModule) -> PyResult<()> {
+  m.add_function(wrap_pyfunction!(consumer, m)?)?;
+  m.add_function(wrap_pyfunction!(produce, m)?)?;
+  Ok(())
+}
+```
+
+> note: you can always map the errors to python equivalents instead of panicking, but more on that later
+
+Few quirks to take care of
+- So the way the tokio runtime works, it keeps track of all tasks you've spawned, and checks their state periodically, so if you have something that blocks the runtime, like what we have here invoked from the runtime itself, it'll not work
+- Don't worry, this doesn't affect 80% of the use cases, and even when it does, there's a way 
+- So this could only happen in complex distributed systems where you are passing python functions to be executed on rust workers, So say I want to build a performant pubsub `consumer` that takes in callbacks, what happens if say you want to `produce` from within this callback? 
+
+Remember we are trying to start a new runtime? This won't work since we're already within a runtime, and even if we try to use the existing runtime, the `block_on` call will be a problem. Here's what you need to do in such cases
+
+```rust
+task::block_in_place(move || {
+  self.rt.block_on(async {
+
+  });
+});
+```
+
+If you want to run more, refer to [tokio documentation](https://docs.rs/tokio/latest/tokio/task/fn.block_in_place.html), or this [github discussion](https://github.com/tokio-rs/tokio/pull/6738) in particular.
 
 
 
