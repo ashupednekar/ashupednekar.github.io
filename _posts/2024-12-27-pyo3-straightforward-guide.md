@@ -438,7 +438,7 @@ task::block_in_place(move || {
 });
 ```
 
-If you want to run more, refer to [tokio documentation](https://docs.rs/tokio/latest/tokio/task/fn.block_in_place.html), or this [github discussion](https://github.com/tokio-rs/tokio/pull/6738) in particular.
+If you want to learn more, refer to [tokio documentation](https://docs.rs/tokio/latest/tokio/task/fn.block_in_place.html), or this [github discussion](https://github.com/tokio-rs/tokio/pull/6738) in particular.
 
 ---
 
