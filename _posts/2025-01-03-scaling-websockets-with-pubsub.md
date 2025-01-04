@@ -18,9 +18,20 @@ So there are two main approaches used widely to solve this problem
 
 Pubsub is also generally used to avoid having multiple services in a microservice system have websockets, and limit the "statefulness" to one or two services that can be given special treatment in terms of availability guarantees, through say node affinity. Wouldn't it be great to have this dedicated service be fully distributed, ideally backed by a RAFT based message broker like `NATS`? Another advantage this brings is make it simpler to work with since websockets will be abstracted as simple fire-and-forget pubsub as far as services are concerned.
 
-## Let's draw it out
+## Approach 
 
 Here's an excalidraw scrsht illustrating the approach
 
 ![websocketstream](https://github.com/user-attachments/assets/9636579c-4598-4514-9ce6-4d3f93327703)
+
+It's a simple idea, which passes websocket messages to and from our services through pubsub streams. There are five three main players here
+
+- client: sends and receives messages over ws to our `websocket` service
+- recv stream: this goroutine is going to be spawned for each ws connection, which'll start a consumer listening at `ws.recv.<svc>.<user>`. These svc and user values are obtained from the request through say, headers or cookies
+- send stream: this gorouting, again per request... will listen for client messages and publish them at `ws.send.<svc>.<user>`, that's it
+- service consumer: So instead of reading messages from a websocket client, our services will consume them from `ws.send.<svc>.<user>`
+- service producer: Whenever service needs to send a message to the client, it'll simply produce to `ws.recv.<svc>.<user>`, this will be picked up by the recv stream and sent to the websocket client
+
+Neat right? And as long as our broker is something like nats/kafka which ensures write consensus, we'll have persistent, distributed websockets that can be scaled independently to any number of replicas, with the added advantage of having dedicated queues for every websocket client. And since these queues are persistent, you can send to them even when the client is not connected, recv stream will pick it up on the next connection :) 
+
 
