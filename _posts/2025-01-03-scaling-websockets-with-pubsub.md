@@ -410,7 +410,7 @@ Server logs
 Websocket client
 
 ```bash
-(base) ~ ❯ websocat ws://localhost:8000/ws/notification/user001/ -H 'Cookie: user=user001;service=service1'
+(base) ~ ❯ websocat ws://localhost:8000/ws/ -H 'Cookie: user=user001;service=service1'
 clientsendingmessage1
 clientsendingmessage2
 serversendingmessage1
