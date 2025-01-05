@@ -34,4 +34,316 @@ It's a simple idea, which passes websocket messages to and from our services thr
 
 Neat right? And as long as our broker is something like nats/kafka which ensures write consensus, we'll have persistent, distributed websockets that can be scaled independently to any number of replicas, with the added advantage of having dedicated queues for every websocket client. And since these queues are persistent, you can send to them even when the client is not connected, recv stream will pick it up on the next connection :) 
 
+## Let's code it up
+
+Cool, let's start our go project
+
+
+I'm gonna add the typical `cmd`, `pkg` structure to it, and we're gonna have three packages, for `broker`, `server` and `stream` respectively
+
+```bash
+(base) websocketstream git:main ❯ tree                                                                 ✖
+.
+├── README.md
+├── cmd
+│   └── main.go
+├── go.mod
+├── go.sum
+└── pkg
+    ├── brokers
+    ├── server
+    └── stream
+
+6 directories, 4 files
+```
+
+---
+
+### Server
+
+Let's start with the server. I'm using `gorilla/websocket` here, add it like so
+
+```bash
+go get github.com/gorilla/websocket
+```
+
+Now go ahead and define the upgrader and the Handler function, in a file called `handler.go`
+
+```go
+package server
+
+import (
+	"log"
+	"net/http"
+	"github.com/gorilla/websocket"
+)
+
+var upgrader = websocket.Upgrader{
+  ReadBufferSize: 1024,
+  WriteBufferSize: 1024,
+}
+
+func HandleWs(w http.ResponseWriter, r *http.Request){
+  conn, err := upgrader.Upgrade(w, r, nil)
+  if err != nil{
+    log.Fatalf("error upgrading websocket connection\n")
+  }
+  defer conn.Close()
+  log.Println("Client connected")
+}
+```
+
+Here's my main server code, under `serve.go`
+
+```go
+package server
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+type Server struct{
+  Port int
+}
+
+func NewServer(port int) *Server {
+  return &Server{port}
+}
+
+func (s *Server) Start(){
+  http.HandleFunc("/ws/", HandleWs)
+  log.Printf("listening on port: %d", s.Port)
+  if err := http.ListenAndServe(fmt.Sprintf(":%d", s.Port), nil); err != nil{
+    log.Fatalf("Error starting server at port %d: %s\n", s.Port, err)
+  }
+}
+```
+
+Go ahead and add this to `cmd/main.go`
+
+```go
+package main
+
+import "github.com/ashupednekar/websocketstream/pkg/server"
+
+func main(){
+  s := server.NewServer(8000)
+  s.Start()
+}
+```
+
+---
+
+### Broker
+
+Now that we have our server, let's set up pubsub. 
+
+I'm gonna create a `base.go` file under `brokers` package with two things. The idea here is to shield the rest of our packages from broker specific stuff, instead they are going to deal with a common `Broker` interface we'll define soon
+
+- A `message` struct, this is the common message type that's gonna be agnostic to which broker we're working with
+
+```go
+type Message struct{
+  Subject string
+  Data []byte
+}
+```
+
+- We need an interface to define what our brokers should do, namely `pub` and `sub` :)
+
+```go
+type Broker interface{
+  Produce(subject string, data []byte);
+  Consume(subject string, ch chan Message)
+}
+```
+
+The `produce` function takes a subject and byte data, I've chosen subject as the terminology because I like nats xP. The same things is going to be routing key and topic respectively when you add amqp and kafka support
+
+Let's have a `NewBroker` function that'll instantiate the right broker based on env, only `nats` for now
+
+```go
+func NewBroker() Broker {
+  //if os.Getenv("PUBSUB_BROKER") == "nats"{
+  return NewNatsBroker("websockets") 
+}
+```
+
+Note that this is returning the interface, i.e. `Broker`, and not the `NatsBroker` type. This keeps it clean in the rest of the modules and serves as a decent abstraction. 
+
+Let's quickly add the nats implementation
+
+```go
+package brokers
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
+)
+
+type NatsBroker struct{
+  StreamName string
+  Stream jetstream.JetStream 
+}
+
+func NewNatsBroker(stream string) *NatsBroker{
+  nc, err := nats.Connect(os.Getenv("NATS_BROKER_URL"))
+  if err != nil{
+    log.Fatalf("couldn't connect to nats: %s", err);
+  }
+  js, _ := jetstream.New(nc)
+  ctx := context.Background()
+  _, err = js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{Name: stream, Subjects: []string{"ws.>"}, Retention: jetstream.WorkQueuePolicy})
+  if err != nil{
+    log.Fatalf("error creating/updating stream: %s", err)
+  }
+  return &NatsBroker{Stream: js, StreamName: stream}
+}
+
+func (self *NatsBroker) Produce(subject string, data []byte){
+  ctx := context.Background()
+  self.Stream.Publish(ctx, subject, data)
+  defer ctx.Done()
+}
+
+func (self *NatsBroker) Consume(subject string, ch chan Message){
+  ctx, _ := context.WithTimeout(context.Background(), time.Second * 300)
+  defer ctx.Done()
+  c, err := self.Stream.CreateOrUpdateConsumer(ctx, self.StreamName, jetstream.ConsumerConfig{
+    Durable: strings.ReplaceAll(fmt.Sprintf("%s-consumer", subject), ".", "-"),
+    FilterSubject: subject,
+  })
+  if err != nil{
+    log.Fatalf("error creating consumer: %s", err)
+  }
+  consumer, err := c.Consume(func(msg jetstream.Msg){
+    msg.Ack()
+    log.Printf("Received message: %v", msg.Data())
+    ch <- Message{
+      Subject: subject,
+      Data: msg.Data(),
+    }
+  })
+  defer consumer.Stop()
+  <-ctx.Done()
+}
+```
+
+> Just add this and run `go mod tidy`, it'll take care of the dependencies
+
+Here's what's being done here
+- Connecting to nats, picking the url from an env
+- Creating the `websockets` stream, with the wildcard pattern `ws.>`, refer to nats docs for more
+- Defined `Produce` and `Consume` methods conforming to the previously defined interface
+
+Note that the consumer accepts a channel `chan Message` and passes that to the callback. Essentially every message consumed will be passed through this channel in the common `Message` format we talked about earlier, with the subject and the byte data
+
+---
+
+### Stream
+
+Now let's get to the meat, the send and recv stream we mentioned in our diagram...
+
+Since we wrote decent abstractions around the pubsub and server, the main business logic is going to be short and clean
+
+
+Let's start with the stream responsible for receiving client messages
+
+```go
+package stream
+
+import (
+	"log"
+
+	"github.com/ashupednekar/websocketstream/pkg/brokers"
+	"github.com/gorilla/websocket"
+)
+
+func RecvClientMessages (conn *websocket.Conn, broker brokers.Broker){
+  go func(){
+    for {
+      _, message, err := conn.ReadMessage()
+      if err != nil{
+        log.Printf("error reading client message: %s\n", err)
+        break
+      }
+      log.Printf("received message from client: %s\n", message)
+      broker.Produce("ws.send.svc.user", message)
+    }
+  }()
+}
+```
+
+The naming here can get tricky, since something that's "sending" messages from one perspective is actually "receiving" from another perspective. That's why I chose to go with what messages they are working with.
+
+
+**This one receives client messages from the websocket client, and produces it to pubsub**
+
+Note that the whole thing is wrapped in a `go func(){}()` cuz we want this to run concurrently in a seperate goroutine
+
+---
+
+Cool, let's proceed to handing the messages from our services
+
+```go
+package stream
+
+import (
+	"github.com/ashupednekar/websocketstream/pkg/brokers"
+	"github.com/gorilla/websocket"
+)
+
+func RecvServiceMessages(conn *websocket.Conn, broker brokers.Broker){
+  ch := make(chan brokers.Message)
+  go broker.Consume("ws.recv.svc.user", ch)
+  for msg := range(ch){
+    conn.WriteMessage(websocket.BinaryMessage, msg.Data)
+  }
+}
+
+```
+
+Here's the bottom line
+
+**This one consumes the messages from pubsub, and writes them to the websocket client**
+
+Note that the consumer here, runs in a seperate goroutine for concurrency, and we're getting the messages it writes to the channel, which are then written to the websocket client
+
+---
+
+### Wrapping up
+
+Let's update our websocket handler
+
+```go
+func HandleWs(w http.ResponseWriter, r *http.Request){
+  conn, err := upgrader.Upgrade(w, r, nil)
+  if err != nil{
+    log.Fatalf("error upgrading websocket connection\n")
+  }
+  defer conn.Close()
+
+  log.Println("Client connected")
+
+  broker := brokers.NewBroker()
+  stream.RecvClientMessages(conn, broker)
+  stream.RecvServiceMessages(conn, broker)
+}
+```
+
+I've just created the broker and started both streams, note that even the goroutine creation is abstracted from here, that's a personal preference, you could go either way
+
+---
+
+### Let's see it in action
+
 
