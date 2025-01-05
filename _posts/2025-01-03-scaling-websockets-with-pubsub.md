@@ -24,7 +24,7 @@ Here's an excalidraw scrsht illustrating the approach
 
 ![websocketstream](https://github.com/user-attachments/assets/9636579c-4598-4514-9ce6-4d3f93327703)
 
-It's a simple idea, which passes websocket messages to and from our services through pubsub streams. There are five three main players here
+It's a simple idea, which passes websocket messages to and from our services through pubsub streams. There are five main players here
 
 - client: sends and receives messages over ws to our `websocket` service
 - recv stream: this goroutine is going to be spawned for each ws connection, which'll start a consumer listening at `ws.recv.<svc>.<user>`. These svc and user values are obtained from the request, say cookies
