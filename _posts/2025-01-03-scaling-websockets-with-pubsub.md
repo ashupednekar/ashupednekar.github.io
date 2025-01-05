@@ -27,7 +27,7 @@ Here's an excalidraw scrsht illustrating the approach
 It's a simple idea, which passes websocket messages to and from our services through pubsub streams. There are five three main players here
 
 - client: sends and receives messages over ws to our `websocket` service
-- recv stream: this goroutine is going to be spawned for each ws connection, which'll start a consumer listening at `ws.recv.<svc>.<user>`. These svc and user values are obtained from the request through say, headers or cookies
+- recv stream: this goroutine is going to be spawned for each ws connection, which'll start a consumer listening at `ws.recv.<svc>.<user>`. These svc and user values are obtained from the request, say cookies
 - send stream: this gorouting, again per request... will listen for client messages and publish them at `ws.send.<svc>.<user>`, that's it
 - service consumer: So instead of reading messages from a websocket client, our services will consume them from `ws.send.<svc>.<user>`
 - service producer: Whenever service needs to send a message to the client, it'll simply produce to `ws.recv.<svc>.<user>`, this will be picked up by the recv stream and sent to the websocket client
@@ -342,8 +342,124 @@ func HandleWs(w http.ResponseWriter, r *http.Request){
 
 I've just created the broker and started both streams, note that even the goroutine creation is abstracted from here, that's a personal preference, you could go either way
 
+### One last thing
+
+We need to identify the target service and user from the request, say through cookies
+I'm gonna update my route and handler to accept these two path params
+
+```go
+http.HandleFunc("/ws/{svc}/{user}/", HandleWs)
+```
+
+```go
+service, _ := r.Cookie("service")
+user, _ := r.Cookie("user")
+log.Printf("service: %s, user: %s", service.Value, user.Value)
+...
+stream.RecvClientMessages(conn, broker, service.Value, user.Value)
+stream.RecvServiceMessages(conn, broker, service.Value, user.Value)
+```
+
+Now let's update our stream functions to accept these, and use them in their corresponding pubsub subjects
+
+```go
+func RecvServiceMessages(conn *websocket.Conn, broker brokers.Broker, service string, user string){
+  ...
+  go broker.Consume(fmt.Sprintf("ws.recv.%s.%s", service, user), ch)
+  ...
+}
+```
+
+```go
+func RecvClientMessages (conn *websocket.Conn, broker brokers.Broker, service string, user string){
+  ...
+  broker.Produce(fmt.Sprintf("ws.send.%s.%s", service, user), message)
+}
+```
+
+```go
+stream.RecvClientMessages(conn, broker, service, user)
+stream.RecvServiceMessages(conn, broker, service, user)
+```
+
 ---
 
 ### Let's see it in action
 
+Server logs
 
+```bash
+(base) websocketstream git:main ❯ go run cmd/main.go                                                 ⏎ ✹
+2025/01/06 01:58:02 listening on port: 8000
+2025/01/06 01:58:14 Client connected
+2025/01/06 01:58:14 service: service1, user: user001
+2025/01/06 01:58:17 received message from client: clientsendingmessage1
+
+2025/01/06 01:58:17 producing to: ws.send.service1.user001
+2025/01/06 01:58:24 received message from client: clientsendingmessage2
+
+2025/01/06 01:58:24 producing to: ws.send.service1.user001
+2025/01/06 01:58:42 Received message: [115 101 114 118 101 114 115 101 110 100 105 110 103 109 101 115 115 97 103 101 49]
+2025/01/06 01:58:44 Received message: [115 101 114 118 101 114 115 101 110 100 105 110 103 109 101 115 115 97 103 101 50]
+2025/01/06 01:58:53 Received message: [121 97 121]
+2025/01/06 01:59:01 received message from client: yay
+
+2025/01/06 01:59:01 producing to: ws.send.service1.user001
+```
+
+Websocket client
+
+```bash
+(base) ~ ❯ websocat ws://localhost:8000/ws/notification/user001/ -H 'Cookie: user=user001;service=service1'
+clientsendingmessage1
+clientsendingmessage2
+serversendingmessage1
+serversendingmessage2
+yay
+yay
+```
+
+Service sending messages
+
+```bash
+(base) ~ ❯ nats pub ws.recv.service1.user001 serversendingmessage1
+01:58:42 Published 21 bytes to "ws.recv.service1.user001"
+(base) ~ ❯ nats pub ws.recv.service1.user001 serversendingmessage2
+01:58:44 Published 21 bytes to "ws.recv.service1.user001"
+(base) ~ ❯ nats pub ws.recv.service1.user001 yay
+01:58:53 Published 3 bytes to "ws.recv.service1.user001"
+```
+
+Service receiving messages
+
+```bash
+(base) ~ ❯ nats sub "ws.send.service1.>"                                                               ⏎
+01:58:10 Subscribing on ws.send.service1.>
+[#1] Received on "ws.send.service1.user001" with reply "_INBOX.K35i42q5yDFnMzZcaoO6aO.X9GVnakO"
+clientsendingmessage1
+
+[#2] Received on "ws.send.service1.user001" with reply "_INBOX.K35i42q5yDFnMzZcaoO6aO.oV4fBGgX"
+clientsendingmessage2
+
+[#3] Received on "ws.send.service1.user001" with reply "_INBOX.K35i42q5yDFnMzZcaoO6aO.io2js6cd"
+yay
+```
+
+---
+
+That's it! 
+
+You now have a scalable websocket broker, you can always try it out by installing it like so...
+
+```bash
+(base) ~ ❯ go install github.com/ashupednekar/websocketstream/cmd@latest                               ⏎
+(base) ~ ❯ which cmd
+/Users/ashutoshpednekar/go/bin/cmd
+(base) ~ ❯ mv /Users/ashutoshpednekar/go/bin/cmd /Users/ashutoshpednekar/go/bin/websocketstream
+(base) ~ ❯ websocketstream
+2025/01/06 02:06:26 listening on port: 8000
+```
+
+Thank you :) Any broker support PR's are welcome. Please star the repo on [github](https://github.com/ashupednekar/websocketstream) 
+
+😄
