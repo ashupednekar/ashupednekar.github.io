@@ -299,4 +299,133 @@ cargo run
 
 Once we add and invoke out utilities, we could run our server with `cargo run listen`, or `./auth listen` once compiled into a static binary
 
+## Server
+
+A quick plug here, I'll replace the error enum in our prelude with one from a crate I've published last year, called [standard-error](https://crates.io/crates/standard-error)
+
+```bash
+(base) auth-svc git:main ❯ cargo add standard-error                                                  ✹ ✭
+    Updating crates.io index
+      Adding standard-error v0.1.5 to dependencies
+             Features:
+             - diesel
+             - git
+             - reqwest
+             - validator
+```
+
+This'll make it easier to work with various libraries as it takes care of mapping the errors and returns a user friendly error message from a yaml file and implements the `IntoResponse` trait. It can also do internationalization for error messages, look at the crate details for more details
+
+Add a `errors.yaml` file at the project root
+```yaml
+errors:
+  - code: ER-0001
+    detail_en_US: "error starting server"
+```
+
+Update the prelude to use `StandardError` instead
+
+```rust
+pub type Result<T> = core::result::Result<T, standard_error::StandardError>;
+```
+
+Let's quickly setup the server module with a dedicated directory for handlers
+
+```bash
+(base) auth-svc git:main ❯ tree src                                                                ⏎ ✹ ✭
+src
+├── cmd
+│   └── mod.rs
+├── conf.rs
+├── main.rs
+├── pkg
+│   ├── mod.rs
+│   └── server
+│       ├── handlers
+│       │   ├── mod.rs
+│       │   └── probes.rs
+│       └── mod.rs
+└── prelude.rs
+
+5 directories, 8 files
+```
+
+Make sure to add the corresponding module definitions in `main.rs` and `mod.rs`
+
+Let's add a `listen` function in `server/mod.rs`
+
+```rust
+pub mod handlers;
+
+use axum::{routing::get, Router};
+use tokio::net::TcpListener;
+use crate::{prelude::Result, conf::settings};
+
+use self::handlers::probes::livez;
+
+
+pub async fn listen() -> Result<()>{
+    let listener = TcpListener::bind(
+        &format!("0.0.0.0:{}", &settings.listen_port)
+    ).await.unwrap();
+    let router = Router::new()
+        .route("/livez/", get(livez));
+    tracing::info!("listening at: {}", &settings.listen_port);
+    axum::serve(listener, router)
+        .await?;
+    Ok(())
+}
+```
+
+I've added a `livex` handler under `probes.rs`
+
+```rust
+use axum::response::IntoResponse;
+
+pub async fn livez() -> impl IntoResponse{
+    "OK"
+}
+```
+
+Go ahead and call this in the `cmd` run function
+
+```rust
+ Some(SubCommandType::Listen) => {
+     server::listen().await?; 
+ }
+```
+
+Now you should be able to start the server
+
+```bash
+(base) auth-svc git:main ❯ cargo run listen                                                          ✹ ✭
+   Compiling auth-svc v0.1.0 (/Users/ashutoshpednekar/Desktop/auth-svc)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.73s
+     Running `target/debug/auth-svc listen`
+2025-02-01T10:55:52.326115Z  INFO auth_svc::pkg::server: listening at: 3000
+```
+
+```bash
+curl http://localhost:3000/livez/ -v
+* Host localhost:3000 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:3000...
+* connect to ::1 port 3000 from ::1 port 57658 failed: Connection refused
+*   Trying 127.0.0.1:3000...
+* Connected to localhost (127.0.0.1) port 3000
+> GET /livez/ HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/8.7.1
+> Accept: */*
+>
+* Request completely sent off
+< HTTP/1.1 200 OK
+< content-type: text/plain; charset=utf-8
+< content-length: 2
+< date: Sat, 01 Feb 2025 10:56:56 GMT
+<
+* Connection #0 to host localhost left intact
+```
+
 
