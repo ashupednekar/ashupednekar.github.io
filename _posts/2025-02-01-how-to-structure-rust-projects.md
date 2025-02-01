@@ -10,7 +10,7 @@ Here's a popular blueprint for go by the streamer Melkey: [go-blueprint](https:/
 
 Rust is mainly a systems language and has varied applications, the web being just one of these. This is probably the reason why there's no such convention available right now, maybe that's something we can look at in the future.
 
-This blog will cover my go-to standard, which is completely based on my personal preference/ inclinations, and heavily inspired by go's `pkg`/`'cmd` convention, which I think makes a lot of sense in general. This is not a hard and fast boilerplate, just a starter kit that can help push your rust projects to be in good enough shape that you can stop worrying about the structure and just build what you want, and fight the borrow checker of course ;)
+This blog will cover my go-to standard, which is completely based on my personal preference/ inclinations, and heavily inspired by go's `pkg`/`cmd` convention, which I think makes a lot of sense in general. This is not a hard and fast boilerplate, just a starter kit that can help push your rust projects to be in good enough shape that you can stop worrying about the structure and just build what you want, and fight the borrow checker of course ;)
 
 > note: This is suitable for small to medium sized projects that mainly belong to the following categories
 > - web services
@@ -51,7 +51,8 @@ opentelemetry_sdk = { version = "0.26.0", features = ["rt-tokio"] }
 tracing-test = "0.2.5"
 ```
 
-Then ofcourse, proceed to add your other dependencies, say `axum` for apis, `sqlx`/`diesel` for databases, `reqwest`, `chrono` etc, and don't forget the main one, `tokio` :)
+
+Then ofcourse, proceed to add your other dependencies, say `axum` for apis, `sqlx`/`diesel` for databases, `reqwest`, `thiserror`, `chrono` etc, and don't forget the main one, `tokio` :)
 
 
 ## Sample use case
@@ -81,4 +82,109 @@ note: see more `Cargo.toml` keys and their definitions at https://doc.rust-lang.
 4 directories, 5 files
 ```
 
+I've added the dependencies like so...
+```rust
+[dependencies]
+lazy_static = "1.5.0"
+config = "0.15.6"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.136"
+clap = { version = "4.5.26", features = ["derive"] }
+tracing = "0.1.40"
+tracing-opentelemetry = "0.27.0"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+opentelemetry = "0.26.0"
+opentelemetry-otlp = { version = "0.26.0", features = ["default", "tracing"] }
+opentelemetry_sdk = { version = "0.26.0", features = ["rt-tokio"] }
+tracing-test = "0.2.5"
+tokio = { version = "1.43.0", features = ["full"] }
+thiserror = "2.0.11"
+```
 
+
+## Prelude
+
+The prelude module contains something we'll end up using throughout, our `Error` and `Result` types, let's go ahead and add these
+
+Define the module in `main.rs` with `mod prelude;` and add a `prelude.rs` file, alongside `main.rs`
+
+```rust
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum CustomError{
+    #[error("some variant")]
+    SomeVariant
+}
+
+pub type Result<T> = core::result::Result<T, CustomError>;
+```
+
+We'll import this result type with `use crate::prelude::Result` going forward
+
+As and when we come across more cases, we'll come back and add variants to the `CustomError` enum
+
+## Config
+
+Next, go ahead and add a `conf` module like we just did with `prelude` and add the following contents
+
+```rust
+use config::{Config, ConfigError, Environment};
+use lazy_static::lazy_static;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct Settings {
+}
+
+impl Settings {
+    pub fn new() -> Result<Self, ConfigError> {
+        let conf = Config::builder()
+            .add_source(Environment::default())
+            .build()?;
+        conf.try_deserialize()
+    }
+}
+
+lazy_static! {
+    pub static ref settings: Settings = Settings::new().expect("improperly configured");
+}
+```
+
+Here's what happening here...
+- The config crate with it's `Config::builder()` reads environment variables and uses `serde` to parse them into a given struct
+- The `lazy_static` macro lets us define a constant called settings that'd be evaluated in a lazy fashion
+
+Now add a config.env at the project root, and let's add one env for illustration, say `LISTEN_PORT`, which also needs a corresponding property in our `Settings` struct
+
+```rust
+#[derive(Deserialize)]
+pub struct Settings {
+    pub listen_port: String
+}
+```
+
+Note that the case doesn't have to be capitalized here, config and serde takes care of that for us.You can also have certain envs as optional, by simply using wrapping it with an `Option`, like so
+
+```rust
+#[derive(Deserialize)]
+pub struct Settings {
+    pub listen_port: String,
+    pub otlp_host: Option<String>,
+    pub otlp_port: Option<String>
+}
+```
+
+Here, I've added two more settings, the host/port of our traces server, more on that later which are optional envs
+
+You can ofcouse have other types as well
+
+```rust
+#[derive(Deserialize)]
+pub struct Settings {
+    pub listen_port: String,
+    pub otlp_host: Option<String>,
+    pub otlp_port: Option<String>,
+    pub use_telemetry: bool
+}
+```
