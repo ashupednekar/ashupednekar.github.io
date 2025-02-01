@@ -701,28 +701,7 @@ Some(SubCommandType::Migrate) => {
 Now we can run our migrations, and the tables should be setup :)
 
 ```bash
-(base) auth-svc git:main ❯ cargo run migrate                                                       ⏎ ✹ ✭
-    Blocking waiting for file lock on build directory
-   Compiling tokio-stream v0.1.17
-   Compiling socket2 v0.5.8
-   Compiling mio v1.0.3
-   Compiling futures-intrusive v0.5.0
-   Compiling futures-util v0.3.31
-   Compiling futures-channel v0.3.31
-   Compiling tokio v1.43.0
-   Compiling sqlx-core v0.8.3
-   Compiling opentelemetry_sdk v0.26.0
-   Compiling tonic v0.12.3
-   Compiling tracing-opentelemetry v0.27.0
-   Compiling opentelemetry-proto v0.26.1
-   Compiling sqlx-postgres v0.8.3
-   Compiling opentelemetry-otlp v0.26.0
-   Compiling sqlx-macros-core v0.8.3
-   Compiling sqlx-macros v0.8.3
-   Compiling sqlx v0.8.3
-   Compiling standard-error v0.1.7
-   Compiling auth-svc v0.1.0 (/Users/ashutoshpednekar/Desktop/auth-svc)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 15.67s
+(base) auth-svc git:main ❯ cargo run migrate                                                       
      Running `target/debug/auth-svc migrate`
 2025-02-01T19:45:42.696946Z DEBUG sqlx::query: summary="CREATE TABLE users ( …" db.statement="\n\nCREATE TABLE users (\n    username TEXT PRIMARY KEY,\n    email TEXT UNIQUE NOT NULL,\n    password TEXT NOT NULL,\n    secret_question TEXT NOT NULL,\n    secret_answer TEXT NOT NULL,\n    display_pic TEXT NOT NULL\n);\n\nCREATE INDEX idx_users_email ON users(email);\n\n" rows_affected=0 rows_returned=0 elapsed=16.270792ms elapsed_secs=0.016270792
 2025-02-01T19:45:42.697160Z  INFO auth_svc::cmd: init migrations applied successfully
@@ -751,6 +730,5 @@ Indexes:
     "users_email_key" UNIQUE CONSTRAINT, btree (email)
 Access method: heap
 ```
-
 
 
