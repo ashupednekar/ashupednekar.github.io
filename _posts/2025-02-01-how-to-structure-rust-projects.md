@@ -23,7 +23,7 @@ Let's start with a `cargo new` to create a bin crate. Once that's done, proceed 
 Let's start by adding the following dependencies to `Cargo.toml`
 
 
-- Instead of sprinking `env::var("MY_ENV")` everywhere, it's better to have a lazy loaded settings struct.
+Instead of sprinking `env::var("MY_ENV")` everywhere, it's better to have a lazy loaded settings struct.
 ```toml
 lazy_static = "1.5.0"
 config = "0.15.6"
@@ -164,7 +164,7 @@ pub struct Settings {
 }
 ```
 
-Note that the case doesn't have to be capitalized here, config and serde takes care of that for us.You can also have certain envs as optional, by simply using wrapping it with an `Option`, like so
+Note that the case doesn't have to be capitalized here, config and serde takes care of that for us. You can also have certain envs as optional, by simply using wrapping it with an `Option`, like so
 
 ```rust
 #[derive(Deserialize)]
@@ -188,3 +188,86 @@ pub struct Settings {
     pub use_telemetry: bool
 }
 ```
+
+## The entrypoint 👏
+
+So far, we've not added anything to our main
+
+![meme](https://i.redd.it/a2n75ff2gvk41.jpg)
+
+Before we do that, let's set up our `cmd` module. This will essentially be a `clap` cli, with sub commands for various things out application can do, like we talked about earlier
+
+Add the `cmd` as a module to `main.rs` with `mod cmd;` and head over to `src/cmd/mod.rs`
+
+First, let's import our `settings` and `Result` we just definedm and the `Parser`/`Subcommand` macros from the `clap` crate
+
+```rust
+use crate::{prelude::Result, conf::settings};
+use clap::{Parser, Subcommand};
+```
+
+Now we need to define a `Cmd` struct and a `SubCommandType` enum like so
+
+```rust
+#[derive(Parser)]
+#[command(about="lets you run auth-svc commands")]
+struct Cmd{
+    #[command(subcommand)]
+    command: Option<SubCommandType>
+}
+
+#[derive(Subcommand)]
+enum SubCommandType{
+    Listen,
+    Migrate,
+}
+```
+
+Let's start with two commands here, `Listen`, which is gonna start our server and `Migrate`, which will set up our db tables, akin to django's `runserver` and `migrate`
+
+Then define a `run` function which will invoke clap's argument parsing and later invoke the respective utilities
+
+```rust
+pub async fn run() -> Result<()>{
+    let args = Cmd::parse();
+    match args.command{
+        Some(SubCommandType::Listen) => {
+            //start server
+        },
+        Some(SubCommandType::Migrate) => {
+            //run diesel/sqlx migrations
+        },
+        None => {
+            tracing::error!("no subcommand passed")
+        }
+    }
+    Ok(())
+}
+```
+
+Now go ahead and call this from your `main.rs`
+
+```rust
+mod prelude;
+mod conf;
+mod cmd;
+
+use crate::prelude::Result;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    tracing_subscriber::fmt::init();
+
+    cmd::run().await?;
+    Ok(())
+}
+```
+
+Few things to note:
+- we've used the `tokio::main` macro to make our main function run within a tokio runtime
+- we've used the `Result` from `prelude` so that we can use the `?` operator on our `run` call
+- note that run is awaited since it's an async function
+- the `tracing_subscriber::fmt::init()` line initiates the tracing module to work with `stdout` to print our logs
+
+
+
