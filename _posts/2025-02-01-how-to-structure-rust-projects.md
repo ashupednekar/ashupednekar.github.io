@@ -272,7 +272,7 @@ Few things to note:
 
 Now, if we run `cargo run help`, clap will kindly print out a useful help it generated for our cli
 
-```rust
+```bash
 (base) auth-svc git:main ❯ cargo run help
 Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
   Running `target/debug/auth-svc help`
