@@ -88,7 +88,7 @@ note: see more `Cargo.toml` keys and their definitions at https://doc.rust-lang.
 
 It's important to note that the `auth` service is merely an example used to demonstrate the project structure. The techniques and patterns we cover here can be applied to any web/API project, not just authentication services. The goal is to establish a solid foundation for building and structuring Rust APIs that can scale and be easily maintained, regardless of the specific functionality they provide. 
 
-If you're primarily interested in the structuring of Rust projects, feel free to skip ahead after this example. The rest of the guide will walk through a full implementation of the auth service, but the structure we've outlined will remain applicable to other use cases as well.
+If you're primarily interested in the structuring of Rust projects, feel free to skip ahead where neded. The rest of the guide will walk through a full implementation of the auth service, but the structure we've outlined will remain applicable to other use cases as well.
 
 ---
 
