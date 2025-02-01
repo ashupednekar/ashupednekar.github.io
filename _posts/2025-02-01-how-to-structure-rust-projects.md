@@ -407,25 +407,92 @@ Now you should be able to start the server
 
 ```bash
 curl http://localhost:3000/livez/ -v
-* Host localhost:3000 was resolved.
-* IPv6: ::1
-* IPv4: 127.0.0.1
-*   Trying [::1]:3000...
-* connect to ::1 port 3000 from ::1 port 57658 failed: Connection refused
-*   Trying 127.0.0.1:3000...
-* Connected to localhost (127.0.0.1) port 3000
 > GET /livez/ HTTP/1.1
 > Host: localhost:3000
-> User-Agent: curl/8.7.1
-> Accept: */*
->
-* Request completely sent off
 < HTTP/1.1 200 OK
 < content-type: text/plain; charset=utf-8
 < content-length: 2
 < date: Sat, 01 Feb 2025 10:56:56 GMT
-<
-* Connection #0 to host localhost left intact
+```
+
+### Packages
+
+The `pkg` module is supposed to contain any abstractions or utility modules with seperation of concern. Let's go with our examlpe, of auth.
+
+The following structure is something off the top of my mind, and may not be the ideal one ofcouse, that's what refactoring is for. I'm trying to put out the though process that could do into deciding the structure.
+
+Our use case is auth, which mainly comprises of the following business logic/ domains
+- user management
+- authn/authz checks
+
+#### user managements
+
+User management are basically a set of actions, apart from `CRUD` that can be performed on a user type, which can go about somewhat like this...
+
+```bash
+mkdir src/pkg/users                                                       ✹ ✭
+touch src/pkg/users/mod.rs                                                ✹ ✭
+touch src/pkg/users/models.rs                                             ✹ ✭
+touch src/pkg/users/actions.rs  
+```
+
+Let's include these modules with module definitions, and start by defining the `User` struct in `models.rs`
+
+Add the `sqlx` dependency and it's `FromRow` macro for future use, along with `Debug` and serde's `Deserialize` with the derive (`#[derive(Debug, Deserialize, FromRow)]`) macro
+
+```rust
+#[derive(Debug, Deserialize, FromRow)]
+pub struct User{
+    pub email: String,
+    pub username: String,
+    pub password: String,
+    pub secret_question: String,
+    pub secret_answer: String,
+    pub display_pic: String
+}
+```
+
+Before we proceed with the database setup, let's think about the actions.. we can broadly list them as follows
+- registration
+ - send_conformation
+ - verify_email
+ - create_user
+- profile
+ - login
+ - update_dp
+- recovery
+ - forgot_password
+ - change_password
+
+Let's replace our actions.rs with a module corresponding to these.
+
+```bash
+❯ tree src/pkg/users                                                       ⏎ ✹ ✭
+src/pkg/users
+├── actions
+│   ├── mod.rs
+│   ├── profile.rs
+│   ├── recovery.rs
+│   └── registration.rs
+├── mod.rs
+└── models.rs
+
+2 directories, 6 files
+```
+
+
+
+
+
+
+#### auth middleware
+
+The authn/authz checks could be a middleware that's invoked on every api call, so let's go with that
+
+```bash
+mkdir src/pkg/middlewares                                                 ✹ ✭
+touch src/pkg/middlewares/mod.rs                                          ✹ ✭
+touch src/pkg/middlewares/auth.rs
 ```
 
 
