@@ -448,7 +448,19 @@ pub async fn listen() -> Result<()>{
 }
 ```
 
-> note: If you have too many routes, it's good practive to move the router to a seperate module, say `router.rs`
+> note: If you have too many routes, it's good practive to move the router to a seperate module, say `router.rs`, like so
+
+```rust
+pub fn build_routes() -> Router{
+    let state = AppState::new();
+    Router::new()
+        .layer(from_fn_with_state(state.clone(), auth_middleware))
+        .route("/livez/", get(livez))
+        .with_state(state)
+}
+```
+Then invoke this from the `listen` function with `axum::serve(listener, build_routes()).await?`
+
 
 ### Packages
 
@@ -603,12 +615,140 @@ use axum::{
 use crate::prelude::Result;
 
 pub async fn auth_middleware(
-    mut request: Request,
+    State(state): State<AppState>,
+    request: Request,
     next: Next,
-) -> Result<Response> {
-    // assuming authn/authz valid for now
-    Ok(next.run(request).await)
+) -> Response {
+    tracing::debug!("state: {:?}", &state);
+    tracing::debug!("req: {:?}", &request);
+    next.run(request).await
 }
 ```
 
+Add it to your router like so
+
+```rust
+pub fn build_routes() -> Router{
+    let state = AppState::new();
+    Router::new()
+        .layer(from_fn_with_state(state.clone(), auth_middleware))
+        .route("/livez/", get(livez))
+        .with_state(state)
+}
+```
+
+### Database
+
+Let's now set up the database, I'll go with `sqlx` cuz of the async support. Let's go...
+
+Make sure you have a running postgres server
+```bash
+docker run --network host --name postgres -d -e POSTGRES_USER=user -e POSTGRES_PASSWORD=pass123  postgres
+```
+
+Now add the dependency and set up the dsn env
+
+```bash
+cargo add sqlx -F postgres,runtime-tokio
+```
+**config.env**
+```dotenv
+LISTEN_PORT=3000
+USE_TELEMETRY=false
+RUST_LOG=debug
+DATABASE_URL=postgres://user:pass123@localhost:5432/auth
+```
+> note: make sure to add this to the settings struct in `conf.rs`
+
+Let's go ahead and create this db in our postgres container
+
+```bash
+docker exec -it postgres psql -U user -d postgres -c 'create database auth'
+CREATE DATABASE
+```
+
+Now we need an init `.sql` script to setup migrations
+
+```sql
+CREATE TABLE users (
+    username TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    secret_question TEXT NOT NULL,
+    secret_answer TEXT NOT NULL,
+    display_pic TEXT NOT NULL
+);
+
+CREATE INDEX idx_users_email ON users(email);
+```
+
+Here, `username` is the primary key and `email` has a unique constraint and a btree index for faster lookups
+
+Create a directory called migrations in `src/` and place this in there. This is an arbitrary choice, could be anywhere. Usually, if there are too many db adaptors, I usually club them in a db module and place migrations within that. Take a call, these are not hard and fast rules.
+
+Now, let's add the migration logic in cmd, under the migrate subcommand type
+
+```rust
+Some(SubCommandType::Migrate) => {
+    let pool = PgPool::connect(&settings.database_url).await?;
+    pool.execute(include_str!("../migrations/init.sql")).await?;
+    tracing::info!("init migrations applied successfully")
+}
+```
+
+> note: make sure to enable the `sqlx` feature in standard-error for auto handling of sqlx errors
+
+Now we can run our migrations, and the tables should be setup :)
+
+```bash
+(base) auth-svc git:main ❯ cargo run migrate                                                       ⏎ ✹ ✭
+    Blocking waiting for file lock on build directory
+   Compiling tokio-stream v0.1.17
+   Compiling socket2 v0.5.8
+   Compiling mio v1.0.3
+   Compiling futures-intrusive v0.5.0
+   Compiling futures-util v0.3.31
+   Compiling futures-channel v0.3.31
+   Compiling tokio v1.43.0
+   Compiling sqlx-core v0.8.3
+   Compiling opentelemetry_sdk v0.26.0
+   Compiling tonic v0.12.3
+   Compiling tracing-opentelemetry v0.27.0
+   Compiling opentelemetry-proto v0.26.1
+   Compiling sqlx-postgres v0.8.3
+   Compiling opentelemetry-otlp v0.26.0
+   Compiling sqlx-macros-core v0.8.3
+   Compiling sqlx-macros v0.8.3
+   Compiling sqlx v0.8.3
+   Compiling standard-error v0.1.7
+   Compiling auth-svc v0.1.0 (/Users/ashutoshpednekar/Desktop/auth-svc)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 15.67s
+     Running `target/debug/auth-svc migrate`
+2025-02-01T19:45:42.696946Z DEBUG sqlx::query: summary="CREATE TABLE users ( …" db.statement="\n\nCREATE TABLE users (\n    username TEXT PRIMARY KEY,\n    email TEXT UNIQUE NOT NULL,\n    password TEXT NOT NULL,\n    secret_question TEXT NOT NULL,\n    secret_answer TEXT NOT NULL,\n    display_pic TEXT NOT NULL\n);\n\nCREATE INDEX idx_users_email ON users(email);\n\n" rows_affected=0 rows_returned=0 elapsed=16.270792ms elapsed_secs=0.016270792
+2025-02-01T19:45:42.697160Z  INFO auth_svc::cmd: init migrations applied successfully
+```
+
+```sql
+auth=# \dt
+       List of relations
+ Schema | Name  | Type  | Owner
+--------+-------+-------+-------
+ public | users | table | user
+
+auth=# \d+ users;
+                                             Table "public.users"
+     Column      | Type | Collation | Nullable | Default | Storage  | Compression | Stats target | Description
+-----------------+------+-----------+----------+---------+----------+-------------+--------------+-------------
+ username        | text |           | not null |         | extended |             |              |
+ email           | text |           | not null |         | extended |             |              |
+ password        | text |           | not null |         | extended |             |              |
+ secret_question | text |           | not null |         | extended |             |              |
+ secret_answer   | text |           | not null |         | extended |             |              |
+ display_pic     | text |           | not null |         | extended |             |              |
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (username)
+    "idx_users_email" btree (email)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+Access method: heap
+```
 
