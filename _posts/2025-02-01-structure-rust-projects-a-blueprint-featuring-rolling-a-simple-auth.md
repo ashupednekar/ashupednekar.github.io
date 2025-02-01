@@ -425,7 +425,7 @@ curl http://localhost:3000/livez/ -v
 < date: Sat, 01 Feb 2025 10:56:56 GMT
 ```
 
-### State
+## State
 
 Usually api services need some application state, that's shared across requests, be it a mutex bound map, database connection pool, etc.
 
@@ -471,8 +471,7 @@ pub fn build_routes() -> Router{
 ```
 Then invoke this from the `listen` function with `axum::serve(listener, build_routes()).await?`
 
-
-### Packages
+## Packages
 
 The `pkg` module is supposed to contain any abstractions or utility modules with seperation of concern. Let's go with our examlpe, of auth.
 
@@ -482,7 +481,7 @@ Our use case is auth, which mainly comprises of the following business logic/ do
 - user management
 - authn/authz checks
 
-#### user managements
+### user managements
 
 User management are basically a set of actions, apart from `CRUD` that can be performed on a user type, which can go about somewhat like this...
 
@@ -601,7 +600,7 @@ impl RecoveryActions for User{
 
 The beauty of doing things this way, and rust traits in general is proper seperation of concerns. Note that we haven't done any actual integrations yet, e.g. SMTP, Cache, DB, etc but we can already use these in our api handlers and test them independently
 
-#### auth middleware
+### auth middleware
 
 The authn/authz checks could be a middleware that's invoked on every api call, so let's go with that
 
@@ -647,7 +646,7 @@ pub fn build_routes() -> Router{
 }
 ```
 
-### Database
+## Database
 
 Let's now set up the database, I'll go with `sqlx` cuz of the async support. Let's go...
 
