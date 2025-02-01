@@ -270,4 +270,33 @@ Few things to note:
 - the `tracing_subscriber::fmt::init()` line initiates the tracing module to work with `stdout` to print our logs
 
 
+Now, if we run `cargo run help`, clap will kindly print out a useful help it generated for our cli
+
+```rust
+(base) auth-svc git:main ❯ cargo run help
+Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
+  Running `target/debug/auth-svc help`
+lets you run auth-svc commands
+
+Usage: auth-svc [COMMAND]
+
+Commands:
+  listen
+  migrate
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+```
+
+If I call without passing any subcommands, our error log will show up, like so
+
+```bash
+cargo run
+  Running `target/debug/auth-svc`
+2025-02-01T06:53:30.148276Z ERROR auth_svc::cmd: no subcommand passed
+```
+
+Once we add and invoke out utilities, we could run our server with `cargo run listen`, or `./auth listen` once compiled into a static binary
+
 
