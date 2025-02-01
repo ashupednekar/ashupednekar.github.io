@@ -88,7 +88,7 @@ note: see more `Cargo.toml` keys and their definitions at https://doc.rust-lang.
 
 It's important to note that the `auth` service is merely an example used to demonstrate the project structure. The techniques and patterns we cover here can be applied to any web/API project, not just authentication services. The goal is to establish a solid foundation for building and structuring Rust APIs that can scale and be easily maintained, regardless of the specific functionality they provide. 
 
-If you're primarily interested in the structuring of Rust projects, feel free to skip ahead where neded. The rest of the guide will walk through a full implementation of the auth service, but the structure we've outlined will remain applicable to other use cases as well.
+If you're primarily interested in the structuring of Rust projects, feel free to skip ahead where needed. The rest of the guide will walk through a full implementation of the auth service, but the structure we've outlined will remain applicable to other use cases as well.
 
 ---
 
@@ -479,7 +479,7 @@ The following structure is something off the top of my mind, and may not be the 
 
 Our use case is auth, which mainly comprises of the following business logic/ domains
 - user management
-- authn/authz checks
+- authentication 
 
 ### user managements
 
@@ -489,7 +489,7 @@ User management are basically a set of actions, apart from `CRUD` that can be pe
 mkdir src/pkg/users                                                       ✹ ✭
 touch src/pkg/users/mod.rs                                                ✹ ✭
 touch src/pkg/users/models.rs                                             ✹ ✭
-touch src/pkg/users/actions.rs  
+touch src/pkg/users/mutators.rs  
 ```
 
 Let's include these modules with module definitions, and start by defining the `User` struct in `models.rs`
@@ -509,23 +509,22 @@ pub struct User{
 ```
 
 Before we proceed with the database setup, let's think about the actions.. we can broadly list them as follows
-- registration
- - send_conformation_email
- - verify_conformation_email
- - create_user
-- profile
- - update_dp
-- recovery
- - send_password_recovery_email
- - verify_password_recovery_email
- - change_password
+registration
+- initiate 
+- verify
+profile
+- update_dp
+recovery
+- initate
+- verify
+- change_password
 
 Let's replace our actions.rs with a module corresponding to these.
 
 ```bash
 ❯ tree src/pkg/users                                                       ⏎ ✹ ✭
 src/pkg/users
-├── actions
+├── adaptors 
 │   ├── mod.rs
 │   ├── profile.rs
 │   ├── recovery.rs
@@ -547,16 +546,16 @@ Also, we need to implement these functions for our `User` struct, can be empty f
 ```rust
 #[async_trait]
 trait RegisterActions{
-    async fn send_conformation_email(&self) -> Result<()>;
-    async fn verify_conformation_email(&self, code: &str) -> Result<()>;
+    async fn initiate(&self) -> Result<()>;
+    async fn verify(&self, code: &str) -> Result<()>;
 }
 
 #[async_trait]
 impl RegisterActions for User{
-    async fn send_conformation_email(&self) -> Result<()>{
+    async fn initiate(&self) -> Result<()>{
         Ok(())
     }
-    async fn verify_conformation_email(&self, code: &str) -> Result<()>{
+    async fn verify(&self, code: &str) -> Result<()>{
         Ok(())
     }
 }
@@ -566,12 +565,12 @@ impl RegisterActions for User{
 
 ```rust
 #[async_trait]
-trait ProfileActions{
+trait ProfileMutator{
     async fn update_dp(&mut self, display_pic: &str) -> Result<()>;
 }
 
 #[async_trait]
-impl ProfileActions for User{
+impl ProfileMutator for User{
     async fn update_dp(&mut self, display_pic: &str) -> Result<()>{
         Ok(())
     }
@@ -583,16 +582,16 @@ impl ProfileActions for User{
 ```rust
 #[async_trait]
 pub trait RecoveryActions{
-    async fn send_password_recovery_email(&self) -> Result<()>;
-    async fn verify_password_recovery_email(&self, code: &str) -> Result<()>;
+    async fn initiate(&self) -> Result<()>;
+    async fn verify(&self, code: &str) -> Result<()>;
 }
 
 #[async_trait]
 impl RecoveryActions for User{
-    async fn send_password_recovery_email(&self) -> Result<()>{
+    async fn initiate(&self) -> Result<()>{
         Ok(())
     }
-    async fn verify_password_recovery_email(&self, code: &str) -> Result<()>{
+    async fn verify(&self, code: &str) -> Result<()>{
         Ok(())
     }
 }
@@ -602,7 +601,7 @@ The beauty of doing things this way, and rust traits in general is proper sepera
 
 ### auth middleware
 
-The authn/authz checks could be a middleware that's invoked on every api call, so let's go with that
+The authn check could be a middleware that's invoked on every api call, so let's go with that
 
 ```bash
 mkdir src/pkg/middlewares                                                 ✹ ✭
@@ -739,5 +738,105 @@ Indexes:
     "users_email_key" UNIQUE CONSTRAINT, btree (email)
 Access method: heap
 ```
+
+We need to add the DB pool to our state, so that it's available to our handlers
+
+```rust
+use std::sync::Arc;
+
+use sqlx::PgPool;
+
+use crate::{prelude::Result, conf::settings};
+
+#[derive(Clone, Debug)]
+pub struct AppState {
+    pub db_pool: Arc<PgPool>
+}
+
+impl AppState {
+    pub async fn new() -> Result<AppState> {
+        let db_pool = Arc::new(PgPool::connect(&settings.database_url).await?);
+        Ok(AppState {
+            db_pool
+        })
+    }
+}
+```
+
+We need to use an `Arc` because this needs to be shared across threads, since our requests handlers will be executed as `tokio` threads
+
+Make the corresponding change in router, now that the new is async, and returns a result type
+
+```rust
+//router
+pub async fn build_routes() -> Result<Router>{
+    let state = AppState::new().await?;
+    Ok(Router::new()
+        .layer(from_fn_with_state(state.clone(), auth_middleware))
+        .route("/livez/", get(livez))
+        .with_state(state))
+}
+
+//server
+axum::serve(listener, build_routes().await?)
+        .await?;
+```
+
+### Email
+
+Let's add an email module to our package, and corresponding settings. 
+
+
+```rust
+use mail_send::{mail_builder::MessageBuilder, SmtpClientBuilder};
+use standard_error::{Interpolate, StandardError};
+
+use crate::conf::settings;
+
+pub async fn send_email(
+    to: &str,
+    subject: &str,
+    body: &str,
+) -> Result<(), StandardError> {
+    let message = MessageBuilder::new()
+        .from(settings.from_email.clone())
+        .to(vec![to.to_string()])
+        .subject(subject.to_string())
+        //.html_body("<h1>Hello, world!</h1>")
+        .text_body(body.to_string());
+
+    tracing::debug!("{:?}", (settings.from_email.clone(), settings.smtp_pass.clone()));
+
+    SmtpClientBuilder::new(settings.smtp_server.clone(), settings.smtp_port)
+        .implicit_tls(false)
+        .credentials((settings.from_email.clone(), settings.smtp_pass.clone()))
+        .connect()
+        .await.unwrap()//map_err(|e| StandardError::new("ER-SMTP").interpolate_err(e.to_string()))?
+        .send(message)
+        .await.map_err(|e| StandardError::new("ER-SMTP").interpolate_err(e.to_string()))?;
+    Ok(())
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use standard_error::StandardError;
+
+    #[tracing_test::traced_test]
+    #[tokio::test]
+    async fn test_send_email() -> Result<(), StandardError> {
+        let to = "ashupednekar49@gmail.com";
+        let subject = "Test Email from Rust";
+        let body = "Hello! This is a test email sent from a Rust application.";
+        send_email(to, subject, body).await?;
+        Ok(())
+    }
+}
+```
+
+### Handlers
+
+Now that all the dependent packages are set up, we can proceed to implement the business logic and add the api handlers and routes
 
 
