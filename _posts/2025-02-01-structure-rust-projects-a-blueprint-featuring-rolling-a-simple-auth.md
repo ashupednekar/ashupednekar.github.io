@@ -55,9 +55,13 @@ tracing-test = "0.2.5"
 Then ofcourse, proceed to add your other dependencies, say `axum` for apis, `sqlx`/`diesel` for databases, `reqwest`, `thiserror`, `chrono` etc, and don't forget the main one, `tokio` :)
 
 
-## Sample use case
+## Sample Use Case
 
-I'll go with rolling our own simple `auth` service so that we can have a relatable example and cover all bases
+In this article, we'll be using the process of rolling out our own simple `auth` service as an example. While this service is the specific use case, the real focus here is on structuring Rust web/API projects in a way that can be applied across various types of services. The auth service is just a relatable, practical example to guide us through building a well-structured Rust project.
+
+We’ll be walking through this example from start to finish, covering everything from basic project setup to advanced considerations. This will allow us to cover all bases, ensuring that you have a solid blueprint for structuring your own Rust APIs in a maintainable and scalable way.
+
+Let's start by setting up a new Rust project:
 
 ```bash
 cargo new auth-svc
@@ -74,13 +78,19 @@ note: see more `Cargo.toml` keys and their definitions at https://doc.rust-lang.
 ├── Cargo.toml
 └── src
     ├── cmd
-    │   └── mod.rs
+    │   └── mod.rs
     ├── main.rs
     └── pkg
         └── mod.rs
-
-4 directories, 5 files
 ```
+
+**Note**
+
+It's important to note that the `auth` service is merely an example used to demonstrate the project structure. The techniques and patterns we cover here can be applied to any web/API project, not just authentication services. The goal is to establish a solid foundation for building and structuring Rust APIs that can scale and be easily maintained, regardless of the specific functionality they provide. 
+
+If you're primarily interested in the structuring of Rust projects, feel free to skip ahead after this example. The rest of the guide will walk through a full implementation of the auth service, but the structure we've outlined will remain applicable to other use cases as well.
+
+---
 
 I've added the dependencies like so...
 ```rust
