@@ -415,6 +415,41 @@ curl http://localhost:3000/livez/ -v
 < date: Sat, 01 Feb 2025 10:56:56 GMT
 ```
 
+### State
+
+Usually api services need some application state, that's shared across requests, be it a mutex bound map, database connection pool, etc.
+
+Let's go with an empty state for now
+
+Add a `state.rs` alongside `main.rs`
+
+```rust
+#[derive(Clone, Debug)]
+pub struct AppState {
+}
+
+impl AppState {
+    pub fn new() -> AppState {
+        AppState {}
+    }
+}
+```
+
+Update your router to include the state
+
+```rust
+pub async fn listen() -> Result<()>{
+    let state = AppState::new();
+    ...
+    let router = Router::new()
+        .route("/livez/", get(livez))
+        .with_state(state);
+    ...
+}
+```
+
+> note: If you have too many routes, it's good practive to move the router to a seperate module, say `router.rs`
+
 ### Packages
 
 The `pkg` module is supposed to contain any abstractions or utility modules with seperation of concern. Let's go with our examlpe, of auth.
@@ -454,14 +489,14 @@ pub struct User{
 
 Before we proceed with the database setup, let's think about the actions.. we can broadly list them as follows
 - registration
- - send_conformation
- - verify_email
+ - send_conformation_email
+ - verify_conformation_email
  - create_user
 - profile
- - login
  - update_dp
 - recovery
- - forgot_password
+ - send_password_recovery_email
+ - verify_password_recovery_email
  - change_password
 
 Let's replace our actions.rs with a module corresponding to these.
@@ -473,17 +508,76 @@ src/pkg/users
 │   ├── mod.rs
 │   ├── profile.rs
 │   ├── recovery.rs
-│   └── registration.rs
+│   └── register.rs
 ├── mod.rs
 └── models.rs
 
 2 directories, 6 files
 ```
 
+In rust, we usually define traits for essentially "things an object can do", so that later on, in our api handlers, we can do something like `user.update_dp()`. Keeps things clean and readable.
 
+Let's go ahead and define these traits for our actions. Do add the `async_trait` dependency cuz we'll need async functions in our traits
 
+Also, we need to implement these functions for our `User` struct, can be empty for now
 
+**register.rs**
 
+```rust
+#[async_trait]
+trait RegisterActions{
+    async fn send_conformation_email(&self) -> Result<()>;
+    async fn verify_conformation_email(&self, code: &str) -> Result<()>;
+}
+
+#[async_trait]
+impl RegisterActions for User{
+    async fn send_conformation_email(&self) -> Result<()>{
+        Ok(())
+    }
+    async fn verify_conformation_email(&self, code: &str) -> Result<()>{
+        Ok(())
+    }
+}
+```
+
+**profile.rs**
+
+```rust
+#[async_trait]
+trait ProfileActions{
+    async fn update_dp(&mut self, display_pic: &str) -> Result<()>;
+}
+
+#[async_trait]
+impl ProfileActions for User{
+    async fn update_dp(&mut self, display_pic: &str) -> Result<()>{
+        Ok(())
+    }
+}
+```
+
+**recovery.rs**
+
+```rust
+#[async_trait]
+pub trait RecoveryActions{
+    async fn send_password_recovery_email(&self) -> Result<()>;
+    async fn verify_password_recovery_email(&self, code: &str) -> Result<()>;
+}
+
+#[async_trait]
+impl RecoveryActions for User{
+    async fn send_password_recovery_email(&self) -> Result<()>{
+        Ok(())
+    }
+    async fn verify_password_recovery_email(&self, code: &str) -> Result<()>{
+        Ok(())
+    }
+}
+```
+
+The beauty of doing things this way, and rust traits in general is proper seperation of concerns. Note that we haven't done any actual integrations yet, e.g. SMTP, Cache, DB, etc but we can already use these in our api handlers and test them independently
 
 #### auth middleware
 
@@ -493,6 +587,28 @@ The authn/authz checks could be a middleware that's invoked on every api call, s
 mkdir src/pkg/middlewares                                                 ✹ ✭
 touch src/pkg/middlewares/mod.rs                                          ✹ ✭
 touch src/pkg/middlewares/auth.rs
+```
+
+Here's our dummy middleware
+
+**auth.rs**
+
+```rust
+use axum::{
+    extract::Request,
+    middleware::Next,
+    response::Response,
+};
+
+use crate::prelude::Result;
+
+pub async fn auth_middleware(
+    mut request: Request,
+    next: Next,
+) -> Result<Response> {
+    // assuming authn/authz valid for now
+    Ok(next.run(request).await)
+}
 ```
 
 
