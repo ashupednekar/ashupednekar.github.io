@@ -788,10 +788,21 @@ axum::serve(listener, build_routes().await?)
         .await?;
 ```
 
-Let's implement few CRUD functions on our `User` struct
+Let's implement the requirede CRUD functions on our `User` struct, along with a `new` method for initialization
 
 ```rust
 impl User{
+
+    pub fn new(payload: RegistrationInput) -> Self{
+        Self {
+            username: payload.username,
+            email: payload.email,
+            password: payload.password,
+            display_pic: None,
+            verified: false,
+        }
+    }
+
     pub async fn save(&self, pool: &PgPool) -> Result<()>{
         sqlx::query!(
             r#"
@@ -808,6 +819,52 @@ impl User{
         .await?;
         Ok(())
     }
+
+    pub async fn mark_as_verified(&self, pool: &PgPool) -> Result<()> {
+        sqlx::query!(
+            r#"
+            UPDATE users 
+            SET verified = true 
+            WHERE username = $1
+            "#,
+            self.username
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_display_pic(&self, pool: &PgPool, new_dp: &str) -> Result<()> {
+        sqlx::query!(
+            r#"
+            UPDATE users 
+            SET display_pic = $1 
+            WHERE username = $2
+            "#,
+            new_dp,
+            self.username
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn find_by_username(pool: &PgPool, username: &str) -> Result<Option<User>> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            SELECT username, email, password, display_pic, verified 
+            FROM users 
+            WHERE username = $1
+            "#,
+            username
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        Ok(user)
+    }
+
 }
 
 ```
@@ -874,6 +931,73 @@ Since we're gonna deal with user management, I created a module called `user_mgm
 
 Let's start with the first handler: **initiate_registration**
 
+Before we proceed to writing the handler itself, we need to implement the business logic in our trait implementation
+
+We need to set the email codes in redis with an expiry... let's add the redis client to the state
+
+```rust
+#[derive(Clone, Debug)]
+pub struct AppState {
+    pub db_pool: Arc<PgPool>,
+    pub redis_client: Arc<Client>,
+}
+
+impl AppState {
+    pub async fn new() -> Result<AppState> {
+        let db_pool = Arc::new(PgPool::connect(&settings.database_url).await?);
+        let redis_client = Arc::new(Client::open(settings.redis_url.as_str()).map_err(|_|StandardError::new("ERR-REDIS-CONN"))?);
+        Ok(AppState { 
+            db_pool,
+            redis_client
+        })
+    }
+}
+```
+Ideally we should be using a connection pool instead of a single connection, like we did for DB, didn't want to complicate for the sake of this blog post, do refer to the [docs](https://docs.rs/redis/latest/redis/) to use `r2d2` to pool your redis connections
+
+> Make sure to run redis with `docker run --network host -d --name redis redis`
+> Add `REDIS_URL` env and conf attribute: `REDIS_URL=redis://localhost:6379`
+
+```rust
+    async fn initiate_registration(&self, state: AppState) -> Result<()> {
+        let code = Uuid::new_v4().to_string();
+        let mut conn = state.redis_client.get_connection().unwrap();
+        let timeout = parse_duration(&settings.registration_timeout).expect("invalid time format").as_secs(); 
+        let _: () = redis::cmd("SET")
+            .arg(&code)
+            .arg(&self.username)
+            .arg("EX")
+            .arg(timeout)
+            .query(&mut conn)
+            .map_err(|_|StandardError::new("ERR-REG-001"))?;
+        send_email(&self.email, "registration", &format!("here's your code: {}", &code)).await?;
+        Ok(())
+    }
+
+    async fn verify_registration(state: AppState, code: &str) -> Result<()> {
+        let mut conn = state.redis_client.get_connection().unwrap();
+        let username: Option<String> = redis::cmd("GET")
+            .arg(code)
+            .query(&mut conn)
+            .map_err(|_| StandardError::new("ERR-REG-002"))?; // expired code
+        if let Some(username) = username{
+            let user = User::find_by_username(&state.db_pool, &username).await?;
+            if let Some(user) = user{
+                user.mark_as_verified(&state.db_pool).await?; 
+            }else{
+                return Err(StandardError::new("ERR-REG-003")); //invalid code
+            }
+        }
+        Ok(())
+    }
+```
+The initiate registration implementation is setting a redis key with a random code as key and username as value, with expiry and sending the code over email
+
+The verify registration tries to fetch this code from redis, if it finds it, the email link is valid, or else it has expired which would be `ERR-REG-002`. Then we set this user as verified, thereby completing the registration process. If there is no user entry, it'll return so through `ERR-REG-003`
+
+
+Now let's bring it all together in the handlers
+
 ```rust
 #[derive(Deserialize)]
 pub struct RegistrationInput {
@@ -883,23 +1007,25 @@ pub struct RegistrationInput {
     pub confirm_password: String,
 }
 
-pub async fn initiate_registration(
-    Json(payload): Json<RegistrationInput>,
+pub async fn initiate_user_registration(
     State(state): State<AppState>,
+    Json(payload): Json<RegistrationInput>,
 ) -> Result<String> {
     if payload.password != payload.confirm_password {
         return Err(StandardError::new("ERR-AUTH-001").code(StatusCode::BAD_REQUEST));
     }
-    let user = User {
-        username: payload.username,
-        email: payload.email,
-        password: payload.password,
-        display_pic: None,
-        verified: false,
-    };
+    let user = User::new(payload);
     user.save(&state.db_pool).await?;
-    user.initiate_registration().await?;
-    Ok(serde_json::to_string(&json!({ "msg": "success" }))?)
+    user.initiate_registration(state).await?;
+    Ok(serde_json::to_string(&json!({ "msg": "registration initiated successfully" }))?)
+}
+
+pub async fn verify_user_registration(
+    State(state): State<AppState>,
+    Query(params): Query<RegVerifyInput>
+) -> Result<String>{
+    User::verify_registration(state, &params.code).await?;
+    Ok(serde_json::to_string(&json!({ "msg": "user verified successfully" }))?)
 }
 ```
 
@@ -911,13 +1037,49 @@ Don't forget to add the route to this handler
  .route("/register/initiate/", post(initiate_registration))
 ```
 
-Note how clean our `save` and `initiate_registration` calls are thanks to the work we did earlier
+Note how clean our handlers end up being are thanks to the work we did earlier. That's what rust coding is all about, "optimize your code for reading, not writing" :)
 
 ```yaml
-  - code: ERR-AUTH-001
+  - code: ERR-REG-000
     detail_en_US: "password and confirm password should match"
+  - code: ERR-REG-001
+    detail_en_US: "error generating validation code"
+  - code: ERR-REG-002
+    detail_en_US: "this code has expired"
+  - code: ERR-REG-003
+    detail_en_US: "this code is invalid"
 ```
 
-As for the validation error, I simply added a new error in the `errors.yaml` and raised it from here with a custom status code (another shameless plug 😉)
+As for the validation error, I simply added the error messages in the `errors.yaml` and raised it from here with a custom status code (another shameless plug 😉)
 
+---
+ 
+Now we should be able to perform user registration with `curl` 😄
 
+```bash
+curl -X POST http://localhost:3000/register/initiate/ -H 'Content-type: application/json' -d '{"username": "ashupednekar", "email": "ashupednekar@gmail.com", "password": "pass123", "confirm_password": "pass123"}'
+{"msg":"registration initiated successfully"}%   
+```
+
+```bash
+curl -X GET 'http://localhost:3000/register/verify/?code=52da603d-db84-4d48-8f2c-3d2a6aa47b8a'     
+{"msg":"user verified successfully"}
+```
+
+```sql
+auth=# select * from users ;
+   username   |          email           | password | display_pic | verified
+--------------+--------------------------+----------+-------------+----------
+ ashu         | ashupednekar49@gmail.com | pass123  |             | f
+ ashupednekar | ashupednekar@gmail.com   | pass123  |             | t
+```
+
+## Conclusion
+
+Let's be clear - this whole auth service was just a practical vehicle to explore Rust project structuring patterns. While we did end up with a sorta working authentication (rather registration xD) system, the real focus was on creating a maintainable and scalable project structure. The pkg/cmd pattern borrowed from Go gives us a clean separation of concerns, with our core business logic living in pkg and our entry points in cmd.
+
+Speaking of cmd, there's an interesting thought for future iterations - since our handlers are essentially just orchestrating calls to our business logic, maybe they belong in cmd rather than pkg? After all, they're more about coordinating how things run rather than implementing core functionality. It's the kind of architectural decision that teams could debate over coffee (or something stronger xD).
+
+And let's be honest - while this structure has worked well for a few projects of mine, it's not a silver bullet at all. Your codebase can and will still get messy if you're not careful. The key is to stay flexible and adapt the structure as your project grows. Using traits for our business logic helps here, making it easier to modify implementations without touching the interfaces. You might be rightly thinking if they were overkill in this example, since we only had a single implementation. It's more meaningful in cases where you have a single interface, but multiple implementations, say pubsub brokers for example. I used them because I like traits and especially the `user.do_this()` invokation 🤣
+
+Remember - project structure is like a good recipe: there are some basic principles to follow, but there's always room for adaptation based on your specific needs. Just try not to let it turn into a spaghetti monster. Nobody likes debugging spaghetti code on a Monday morning. But when it does, just take a deep breath and ponder about refactoring
