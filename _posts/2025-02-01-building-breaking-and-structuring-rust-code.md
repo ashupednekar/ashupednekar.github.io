@@ -1074,6 +1074,9 @@ auth=# select * from users ;
  ashupednekar | ashupednekar@gmail.com   | pass123  |             | t
 ```
 
+Let's leave the rest of the implementation as an exercise, go ahead and add real stuff like CSRF validation, oauth provider support, multi-tenancy, etc. This topic is endless, trust me xD... 
+
+
 ## Conclusion
 
 Let's be clear - this whole auth service was just a practical vehicle to explore Rust project structuring patterns. While we did end up with a sorta working authentication (rather registration xD) system, the real focus was on creating a maintainable and scalable project structure. The pkg/cmd pattern borrowed from Go gives us a clean separation of concerns, with our core business logic living in pkg and our entry points in cmd.
