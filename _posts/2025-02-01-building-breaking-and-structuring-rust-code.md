@@ -735,8 +735,7 @@ auth=# \d+ users;
  username        | text |           | not null |         | extended |             |              |
  email           | text |           | not null |         | extended |             |              |
  password        | text |           | not null |         | extended |             |              |
- secret_question | text |           | not null |         | extended |             |              |
- secret_answer   | text |           | not null |         | extended |             |              |
+ verified        | bool |           | not null |         | extended |             |              |
  display_pic     | text |           | not null |         | extended |             |              |
 Indexes:
     "users_pkey" PRIMARY KEY, btree (username)
@@ -1035,6 +1034,7 @@ Don't forget to add the route to this handler
 
 ```rust
  .route("/register/initiate/", post(initiate_registration))
+ .route("/register/verify/", get(verify_registration))
 ```
 
 Note how clean our handlers end up being are thanks to the work we did earlier. That's what rust coding is all about, "optimize your code for reading, not writing" :)
@@ -1083,6 +1083,5 @@ Let's be clear - this whole auth service was just a practical vehicle to explore
 
 Speaking of cmd, there's an interesting thought for future iterations - since our handlers are essentially just orchestrating calls to our business logic, maybe they belong in cmd rather than pkg? After all, they're more about coordinating how things run rather than implementing core functionality. It's the kind of architectural decision that teams could debate over coffee (or something stronger xD).
 
-And let's be honest - while this structure has worked well for a few projects of mine, it's not a silver bullet at all. Your codebase can and will still get messy if you're not careful. The key is to stay flexible and adapt the structure as your project grows. Using traits for our business logic helps here, making it easier to modify implementations without touching the interfaces. You might be rightly thinking if they were overkill in this example, since we only had a single implementation. It's more meaningful in cases where you have a single interface, but multiple implementations, say pubsub brokers for example. I used them because I like traits and especially the `user.do_this()` invokation 🤣
-
+And let's be honest - while this structure has worked well for a few projects of mine, it's not a silver bullet at all. Your codebase can and will still get messy if you're not careful. The key is to stay flexible and adapt the structure as your project grows. Using traits for our business logic helps here, making it easier to modify implementations without touching the interfaces. You might be rightly thinking if they were overkill in this example, since we only had a single implementation. It's more meaningful in cases where you have a single interface, but multiple implementations, say pubsub brokers for example.
 Remember - project structure is like a good recipe: there are some basic principles to follow, but there's always room for adaptation based on your specific needs. Just try not to let it turn into a spaghetti monster. Nobody likes debugging spaghetti code on a Monday morning. But when it does, just take a deep breath and ponder about refactoring
