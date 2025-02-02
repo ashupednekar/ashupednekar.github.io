@@ -905,6 +905,12 @@ pub async fn initiate_registration(
 
 I prefer to define the input structs right next to the handlers for clarity, since my handlers are divided into smaller modules. You could also choose to go the serializers route and keep these together under a `serializers` module as well
 
+Don't forget to add the route to this handler
+
+```rust
+ .route("/register/initiate/", post(initiate_registration))
+```
+
 Note how clean our `save` and `initiate_registration` calls are thanks to the work we did earlier
 
 ```yaml
