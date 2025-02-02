@@ -108,7 +108,13 @@ opentelemetry-otlp = { version = "0.26.0", features = ["default", "tracing"] }
 opentelemetry_sdk = { version = "0.26.0", features = ["rt-tokio"] }
 tracing-test = "0.2.5"
 tokio = { version = "1.43.0", features = ["full"] }
-thiserror = "2.0.11"
+axum = "0.8.1"
+sqlx = { version = "0.8.3", features = ["postgres", "runtime-tokio"] }
+async-trait = "0.1.86"
+axum-macros = "0.5.0"
+standard-error = { version = "0.1.7", features = ["sqlx"] }
+chrono = { version = "0.4.39", features = ["serde"] }
+mail-send = "0.5.0"
 ```
 
 
@@ -322,6 +328,7 @@ A quick plug here, I'll replace the error enum in our prelude with one from a cr
              - git
              - reqwest
              - validator
+             - sqlx
 ```
 
 This'll make it easier to work with various libraries as it takes care of mapping the errors and returns a user friendly error message from a yaml file and implements the `IntoResponse` trait. It can also do internationalization for error messages, look at the crate details for more details
@@ -502,8 +509,6 @@ pub struct User{
     pub email: String,
     pub username: String,
     pub password: String,
-    pub secret_question: String,
-    pub secret_answer: String,
     pub display_pic: String
 }
 ```
@@ -546,16 +551,17 @@ Also, we need to implement these functions for our `User` struct, can be empty f
 ```rust
 #[async_trait]
 trait RegisterActions{
-    async fn initiate(&self) -> Result<()>;
-    async fn verify(&self, code: &str) -> Result<()>;
+    async fn initiate_registration(&self) -> Result<()>;
+    async fn verify_registration(&self, code: &str) -> Result<()>;
 }
+
 
 #[async_trait]
 impl RegisterActions for User{
-    async fn initiate(&self) -> Result<()>{
+    async fn initiate_registration(&self) -> Result<()>{
         Ok(())
     }
-    async fn verify(&self, code: &str) -> Result<()>{
+    async fn verify_registration(&self, code: &str) -> Result<()>{
         Ok(())
     }
 }
@@ -782,6 +788,31 @@ axum::serve(listener, build_routes().await?)
         .await?;
 ```
 
+Let's implement few CRUD functions on our `User` struct
+
+```rust
+impl User{
+    pub async fn save(&self, pool: &PgPool) -> Result<()>{
+        sqlx::query!(
+            r#"
+            INSERT INTO users (username, email, password, display_pic, verified) 
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+            self.username,
+            self.email,
+            self.password,
+            self.display_pic,
+            self.verified
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+}
+
+```
+
+
 ### Email
 
 Let's add an email module to our package, and corresponding settings. 
@@ -838,5 +869,49 @@ mod tests {
 ### Handlers
 
 Now that all the dependent packages are set up, we can proceed to implement the business logic and add the api handlers and routes
+
+Since we're gonna deal with user management, I created a module called `user_mgmt` under handlers
+
+Let's start with the first handler: **initiate_registration**
+
+```rust
+#[derive(Deserialize)]
+pub struct RegistrationInput {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+    pub confirm_password: String,
+}
+
+pub async fn initiate_registration(
+    Json(payload): Json<RegistrationInput>,
+    State(state): State<AppState>,
+) -> Result<String> {
+    if payload.password != payload.confirm_password {
+        return Err(StandardError::new("ERR-AUTH-001").code(StatusCode::BAD_REQUEST));
+    }
+    let user = User {
+        username: payload.username,
+        email: payload.email,
+        password: payload.password,
+        display_pic: None,
+        verified: false,
+    };
+    user.save(&state.db_pool).await?;
+    user.initiate_registration().await?;
+    Ok(serde_json::to_string(&json!({ "msg": "success" }))?)
+}
+```
+
+I prefer to define the input structs right next to the handlers for clarity, since my handlers are divided into smaller modules. You could also choose to go the serializers route and keep these together under a `serializers` module as well
+
+Note how clean our `save` and `initiate_registration` calls are thanks to the work we did earlier
+
+```yaml
+  - code: ERR-AUTH-001
+    detail_en_US: "password and confirm password should match"
+```
+
+As for the validation error, I simply added a new error in the `errors.yaml` and raised it from here with a custom status code (another shameless plug 😉)
 
 
