@@ -1,6 +1,6 @@
 ## HTTP - intro
 
-Buckle up, we're gonna dive into HTTP, the protocol that powers the internet. I'm not going to start with "HTTP stands for hyper tex..", we all learnt that as kids. As developers, we can understand it at a much simpler and relatable way.
+Buckle up, we're gonna dive into HTTP, the protocol that powers the internet. I'm not going to start with "HTTP stands for hyper tex..", we all learnt that as kids. As developers, we can understand it in a much simpler and relatable way.
 
 ## What's a protocol anyway?
 
