@@ -69,12 +69,21 @@ Let's take a look at HTTP in action like we did for TCP
 
 ## HTTP at it's simplest
 
+Here, I'm starting a TCP server at port 3000
+
+
 ![server](https://github.com/user-attachments/assets/c5a080db-bc51-4d10-99d2-a07cd56b9e7d)
 
 ![client](https://github.com/user-attachments/assets/77138918-fc0d-4a08-9d26-a4d280b937f5)
 
 
-## Let's code it upz
+I'm sending a simple `POST` request with `cURL` that just sends an 8 byte string "hey jane", on the server side I'm literally typing out the text format HTTP protocol, which curl then understands this and parses our headers and body accordingly.
+
+
+## Let's look at the RFC
+
+
+## Time to code it up
 
 
 ### Structure
