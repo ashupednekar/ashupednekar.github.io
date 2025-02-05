@@ -69,10 +69,9 @@ Let's take a look at HTTP in action like we did for TCP
 
 ## HTTP at it's simplest
 
-![client](https://github.com/user-attachments/assets/dacec3a6-a9aa-477a-b683-5b0b2d818bcb)
+![server](https://github.com/user-attachments/assets/45f05caa-0def-4ced-9e7b-ff8a97f3c7ce)
 
-![server](https://github.com/user-attachments/assets/3f46015e-209f-4932-bd1e-0b3e6f63e27e)
-
+![client](https://github.com/user-attachments/assets/15453747-9ded-4889-a48b-a01af774eefd)
 
 ## Let's code it upz
 
