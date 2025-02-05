@@ -16,6 +16,44 @@ If you come from CS, you've seen this diagram a thousand times already. But here
 
 ![OSI](https://www.indusface.com/wp-content/uploads/2023/09/OSI-Model-7-layers.png)
 
+Found this really nice diagram that actually has really nice one liners with simple examples.
+
+Here's what we need to know..
+
+#### Layer 4
+
+The transport layer keeps track of the end to end connections and does things like handshakes, acknowledgements and package redeliveries. Bottom line, it makes sure a packet that's sent reaches the other side. 
+
+TCP and UDP are the two main protocols here, `HTTP/1.1` the one we're buildig here is built on top of TCP. The UDP protocol is meant for cases where a few packet drops wouldn't affect the user experience, say video streaming for example. Though nowadays our network infrastructure and error correction techniques have gotten so good, the web is eventually said to phase out TCP in favour of UDP(quic)... that's `HTTP/3`.
+
+Anyway, as far as we are concerned, TCP lets us create servers that listen on a port, and clients can connect and send data over. Here's a quick demo using `nc` and `telnet`
+
+```bash
+(base) ~ ❯ nc -l -k 3000                                                                               ⏎
+client sent message
+server sent message
+```
+
+We started a server at port 3000
+
+
+```bash
+base) ~ ❯ telnet localhost 3000                                                                       ⏎
+Trying ::1...
+telnet: connect to address ::1: Connection refused
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+client sent message
+server sent message
+```
+
+Telnet lets us connect to this server and send some bytes. Then, we sent some data from the server back to the client
+
+That's TCP. It's pretty straightforward to implement this in most languages
+
+
+#### Layer 7
 
 
 ## HTTP at it's simplest
