@@ -59,7 +59,7 @@ The application layer is basically the end user logic that deals with the data t
 
 Imagine a person sitting in front of a server looking at messages clients sent over TCP and replying, here's a `chatgpt` illustration
 
-
+![image](https://github.com/user-attachments/assets/253d1802-cced-43ef-b4fb-689d3184dcdd)
 
 
 ## HTTP at it's simplest
