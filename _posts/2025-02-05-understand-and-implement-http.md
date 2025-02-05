@@ -69,7 +69,7 @@ Let's take a look at HTTP in action like we did for TCP
 
 ## HTTP at it's simplest
 
-![server](https://github.com/user-attachments/assets/c3eea7b3-1248-497a-aa34-754d1c154a4c)
+![server](https://github.com/user-attachments/assets/c5a080db-bc51-4d10-99d2-a07cd56b9e7d)
 
 ![client](https://github.com/user-attachments/assets/77138918-fc0d-4a08-9d26-a4d280b937f5)
 
