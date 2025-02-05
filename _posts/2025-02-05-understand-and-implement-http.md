@@ -71,7 +71,7 @@ Let's take a look at HTTP in action like we did for TCP
 
 ![server](https://github.com/user-attachments/assets/c3eea7b3-1248-497a-aa34-754d1c154a4c)
 
-![client](https://github.com/user-attachments/assets/28f049be-f6da-4976-a816-0fcaf5a50f08)
+![client](https://github.com/user-attachments/assets/77138918-fc0d-4a08-9d26-a4d280b937f5)
 
 
 ## Let's code it upz
