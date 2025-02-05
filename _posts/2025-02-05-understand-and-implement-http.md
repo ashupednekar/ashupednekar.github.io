@@ -71,15 +71,7 @@ Let's take a look at HTTP in action like we did for TCP
 
 ![server](https://github.com/user-attachments/assets/c3eea7b3-1248-497a-aa34-754d1c154a4c)
 
-<div style="display: none;" id="delayedGif">
-  ![client](https://github.com/user-attachments/assets/19edf3b8-11b4-4a59-8ead-147af0e8a5f6)
-</div>
-
-<script>
-    setTimeout(function() {
-        document.getElementById('delayedGif').style.display = 'block';
-    }, 3000);
-</script>
+![client](https://github.com/user-attachments/assets/28f049be-f6da-4976-a816-0fcaf5a50f08)
 
 
 ## Let's code it upz
