@@ -26,7 +26,7 @@ The transport layer keeps track of the end to end connections and does things li
 
 TCP and UDP are the two main protocols here, `HTTP/1.1` the one we're buildig here is built on top of TCP. The UDP protocol is meant for cases where a few packet drops wouldn't affect the user experience, say video streaming for example. Though nowadays our network infrastructure and error correction techniques have gotten so good, the web is eventually said to phase out TCP in favour of UDP(quic)... that's `HTTP/3`.
 
-Anyway, as far as we are concerned, TCP lets us create servers that listen on a port, and clients can connect and send data over. Here's a quick demo using `nc` and `telnet`
+Anyway, as far as we are concerned, TCP lets us create servers that listen on a port, that clients can connect and send data over. Here's a quick demo using `nc` and `telnet`
 
 ```bash
 (base) ~ ❯ nc -l -k 3000                                                                               ⏎
