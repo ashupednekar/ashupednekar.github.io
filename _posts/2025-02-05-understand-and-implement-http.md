@@ -63,7 +63,7 @@ Imagine a person sitting in front of a server looking at messages clients sent o
 
 What this guy is doing is the application layer. But it's not realistic to code this way, if clients were sending whatever they want. That's where HTTP comes in.
 
-It defines a simple text format that's agreed upon, here's the [RFC for HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616), so that we can have abstractions built on top of this that we can work with across languages. There libraries and frameworks to further abstract commonly used features, to make it more productive and less error prone to build apis or web services. The level of abstraction you want to have is a discussion for another day 😄
+It defines a simple text format that's agreed upon, here's the [RFC for HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616), so that we can have abstractions built on top of this that we can work with across languages. Libraries and frameworks to further abstract commonly used features, to make us more productive and less error prone to build apis or web services. The level of abstraction you want to have is a discussion for another day 😄
 
 Let's take a look at HTTP in action like we did for TCP
 
