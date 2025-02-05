@@ -55,12 +55,18 @@ That's TCP. It's pretty straightforward to implement this in most languages
 
 #### Layer 7
 
+The application layer is basically the end user logic that deals with the data to serve business logic, essentially.
+
+Imagine a person sitting in front of a server looking at messages clients sent over TCP and replying, here's a `chatgpt` illustration
+
+
+
 
 ## HTTP at it's simplest
 
 
 
-## Let's code it up
+## Let's code it upz
 
 
 ### Structure
