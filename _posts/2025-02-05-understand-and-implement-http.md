@@ -75,7 +75,8 @@ Here, I'm starting a TCP server at port 3000
 
 Now, let's send a simple `POST` request with `cURL` that just sends an 8 byte string "hey jane", of type `text/plain`
 
-![client](https://github.com/user-attachments/assets/f0b4ff2c-ee91-4491-b75b-b887ef047cbf)
+![client](https://github.com/user-attachments/assets/f686a909-91e0-4d02-a4b1-309f88d074cd)
+
 
 On the server side I'm literally typing out the text format HTTP protocol, which curl then understands this and parses our headers and body accordingly.
 
