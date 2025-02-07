@@ -81,14 +81,46 @@ Now, let's send a simple `POST` request with `cURL` that just sends an 8 byte st
 On the server side I'm literally typing out the text format HTTP protocol, which curl then understands this and parses our headers and body accordingly.
 
 
-## Let's look at the RFC
-
-
 ## Time to code it up
-
 
 ### Structure
 
+```toml
+lazy_static = "1.5.0"
+config = "0.15.6"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.136"
+clap = { version = "4.5.26", features = ["derive"] }
+tracing = "0.1.40"
+tracing-opentelemetry = "0.27.0"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+opentelemetry = "0.26.0"
+opentelemetry-otlp = { version = "0.26.0", features = ["default", "tracing"] }
+opentelemetry_sdk = { version = "0.26.0", features = ["rt-tokio"] }
+tracing-test = "0.2.5"
+tokio = { version = "1.43.0", features = ["full"] }
+```
+
+
+```bash
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── cmd
+    │   └── mod.rs
+    ├── main.rs
+    └── pkg
+        ├── mod.rs
+        ├── request
+        │   ├── builder.rs
+        │   ├── mod.rs
+        │   └── parser.rs
+        └── server
+            ├── listen.rs
+            └── mod.rs
+
+6 directories, 10 files
+```
 
 ### TCP Server
 
