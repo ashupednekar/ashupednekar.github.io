@@ -71,13 +71,13 @@ Let's take a look at HTTP in action like we did for TCP
 
 Here, I'm starting a TCP server at port 3000
 
+![server](https://github.com/user-attachments/assets/d861ead1-84fe-4624-9850-ba37b695f7b8)
 
-![server](https://github.com/user-attachments/assets/c5a080db-bc51-4d10-99d2-a07cd56b9e7d)
+Now, let's send a simple `POST` request with `cURL` that just sends an 8 byte string "hey jane", of type `text/plain`
 
-![client](https://github.com/user-attachments/assets/77138918-fc0d-4a08-9d26-a4d280b937f5)
+![client](https://github.com/user-attachments/assets/f0b4ff2c-ee91-4491-b75b-b887ef047cbf)
 
-
-I'm sending a simple `POST` request with `cURL` that just sends an 8 byte string "hey jane", on the server side I'm literally typing out the text format HTTP protocol, which curl then understands this and parses our headers and body accordingly.
+On the server side I'm literally typing out the text format HTTP protocol, which curl then understands this and parses our headers and body accordingly.
 
 
 ## Let's look at the RFC
