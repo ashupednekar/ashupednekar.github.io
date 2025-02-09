@@ -653,6 +653,11 @@ server.listen().await?;
 
 That's it, we can now run our server and call our api's with `cURL`
 
+![server](https://github.com/user-attachments/assets/82c25131-ede2-4ca9-ab42-787fca6debcd)
+
+![client](https://github.com/user-attachments/assets/c429665f-7419-46a2-94c9-4850438963e8)
+
+Happy HTTPing...😄
 
 ## Future work
 
