@@ -278,6 +278,8 @@ Cool. Now that we have the building blocks in place, let's write the actual pars
 
 So the key here is that apart from the body, the rest of the request stream is a `String`, once we get that, we can perform string manipulation to get our request attributes. 
 
+#### Body
+
 We know that the headers and the body are delimitted by `\r\n\r\n`.
 
 But converting the whole things to a string prematurely and say, spliting would be unwise as it could corrupt our non utf body, not to mention the unnecessary serialization cost
@@ -294,10 +296,11 @@ if let Some(pos) = buf.windows(sep.len()).position(|window| window == sep) {
 Once we have the position of the seperator, the payload up to that is our metadata, containing headers and other information, and anything after that is our body.
 
 > note: the +4 is to cover for the length of the seperator itself, which is 4
+> note: this is the most common approach, it is `O(n)`, but should be okay since the number of headers is usually small. We could look at faster options like using a crate with simd optimizations for string lookup
 
 Let's now go about extracting the various request attributes from `meta`
 
-#### method
+#### Method
 
 We know that the first line is, e.g. `GET / HTTP/1.1`.
 
@@ -317,7 +320,7 @@ the first line is spliting `meta` into two parts with `\r\n` as the delimitter. 
 
 Now, we split `info_parts` into three with ` ` as the delimmiter. The first of which is our method.We then call `parse()` on it which invokes the `FromStr` trait implementation we wrote earlier to get our `Method` enum
 
-#### path
+#### Path
 
 The second part of `info_parts` is going to have our request path
 
@@ -330,7 +333,7 @@ let path = path.to_string();
 
 But it could also include query params, which shouldn't be included in our request attribute. Thus, we parse the url and get the proper path string
 
-#### params
+#### Params
 
 We can use the same parsed url object to get the query params
 
@@ -343,7 +346,7 @@ let params: HashMap<String, String> = url
 
 Here, I'm converting the query pairs to `String`, and then collecting into our `HashMap<String, String>`. See how readable rust's functional iterators are compared to having yet another procedural loop...
 
-#### headers
+#### Headers
 
 Another beautiful aspect of the fact that `splitn` gives us an iterator instead of say an array, (which is also an iterator in rust, but that's beside the point) is that when we called `.next()` earlier to get our `info` for extracting the first line, it also removes it from the iterator.
 
@@ -439,11 +442,216 @@ You could ofcourse seperate thise into functions for each parsing, but these day
 
 ### Response Builder
 
+Let's define the response struct and an enum for known status codes
 
-### Bring it together
+```rust
+pub struct Response {
+    pub body: Vec<u8>,
+    pub headers: HashMap<String, String>,
+    pub status: StatusCode,
+}
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StatusCode {
+    Ok = 200,
+    Created = 201,
+    Accepted = 202,
+    NoContent = 204,
+    BadRequest = 400,
+    Unauthorized = 401,
+    Forbidden = 403,
+    NotFound = 404,
+    InternalServerError = 500,
+    NotImplemented = 501,
+    BadGateway = 502,
+    ServiceUnavailable = 503,
+}
+
+impl StatusCode {
+    pub fn as_http(&self) -> String {
+        let reason = match self {
+            StatusCode::Ok => "OK",
+            StatusCode::Created => "Created",
+            StatusCode::Accepted => "Accepted",
+            StatusCode::NoContent => "No Content",
+            StatusCode::BadRequest => "Bad Request",
+            StatusCode::Unauthorized => "Unauthorized",
+            StatusCode::Forbidden => "Forbidden",
+            StatusCode::NotFound => "Not Found",
+            StatusCode::InternalServerError => "Internal Server Error",
+            StatusCode::NotImplemented => "Not Implemented",
+            StatusCode::BadGateway => "Bad Gateway",
+            StatusCode::ServiceUnavailable => "Service Unavailable",
+        };
+        format!("HTTP/1.1 {} {}\r\n", *self as i32, reason)
+    }
+}
+```
+
+The `as_http` methods is pretty self-explanatory, it takes in the status code as an integer and interpolates it in the `HTTP/1.1` conformant format, forming the first line of our response.
+
+We need an abstraction that accepts byte body and status, and lets use set response headers before returning. 
+
+```rust
+impl Response {
+    pub fn new(body: Vec<u8>, status: StatusCode) -> Self {
+        let mut headers = HashMap::new();
+        headers.insert("Content-Length".to_string(), format!("{}", body.len()));
+        Self {
+            body,
+            headers,
+            status,
+        }
+    }
+
+    pub fn set_header(&mut self, key: &str, val: &str) {
+        self.headers.insert(key.to_string(), val.to_string());
+    }
+}
+```
+
+The `headers` hashmap is initiated with a `Content-Length` header, which is simply the length of the body. The `set_header` then takes a mutable reference to `self`, in order to add more response headers.
+
+Now it's time to cnovert this to an `HTTP/1.1` conformant response
+
+```rust
+impl Response {
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut res: String = self.status.as_http();
+        for (k, v) in self.headers.iter() {
+            res += &format!("{}: {}\r\n", &k, &v);
+        }
+        res += "\r\n";
+        let mut res: Vec<u8> = res.into_bytes();
+        res.extend_from_slice(&self.body);
+        res
+    }
+}
+```
+
+The `as_http` call on the status fives us our first line. Then we iterate through our headers and interpolate them in the `HTTP/1.1` format.
+
+Note that, so far, our response object was a `String`. Once we're done with the headers, we add theanother `\r\n` to form the `\r\n\r\n` delimitter between headers and body, and convert it to a byte vector. Then, we simply extend it with our body slice, forming our response as `Vec<u8>`
+
+We can now use it in our `handle_connection` function, like so...
+
+```rust
+pub async fn handle_connection(mut socket: TcpStream, routes: Router<Handler>) -> Result<()> {
+    let mut buf = vec![0; 1024];
+    loop {
+        let n = socket.read(&mut buf).await?;
+        if n == 0 {
+            return Ok(());
+        }
+        let body = buf[..n].to_vec(); 
+        let request = Request::parse(body)?;
+        let res = handle(request);
+        socket.write_all(&res).await?
+    }
+}
+```
+
+The handle function looks like this
+
+```rust
+pub fn handle(req: Request) -> Result<Response> {
+    tracing::info!("received req: {:?}", &req);
+    let res = Response::new(
+        serde_json::to_vec(&json!({"msg": "success"}))?,
+        StatusCode::Ok,
+    );
+    Ok(res)
+}
+```
+
+It's starting to look like a proper micro-framework now, right? 😄 We should be able to run the server at this point, but there's one thing missing.
+
+We can't just go about adding the handler methods directly to our listen function.
+
+
+### Router
+
+That's where our router comes with. Essentially it's a map our routes to functions to be called. But instead of using the general purpose `HashMap<_, _>`, we're gonna go with the `Router` map from the `matchit` crate. 
+
+This is the same crate internally used by the likes of `Actix`/`Axum`, so doesn't need much introduction ;)
+
+Let's update our server struct to include this router
+
+```rust
+use matchit::Router;
+pub type Handler = fn(req: Request) -> Result<Response>;
+
+pub struct HTTPServer {
+    pub addr: String,
+    pub routes: Router<Handler>,
+}
+```
+
+It's essentially a map of string to a generic T, which we've specified as our custom type `Handler`. This encapsulates our handler type's expected signature and makes it cleaner as part of function signature, aiding maintenability
+
+Now, let's add a function that lets us add routes to our server
+
+```rust
+impl HTTPServer {
+    pub fn route(&mut self, path: &str, handler: Handler) -> Result<()> {
+        self.routes.insert(path, handler)?;
+        Ok(())
+    }
+}
+```
+
+This takes a mutable reference to the server, and insers the given path, and handler to the matchit router map. If the given handler doesn't meet the required signature, it'll error out at compile time, similar to axum
+
+We now need a function to query this map, while handling client connections
+
+```rust
+pub async fn route(request: Request, routes: Router<Handler>) -> Result<Vec<u8>> {
+    tracing::info!("routing to: {}", &request.path);
+    let res = match routes.at(&request.path) {
+        Ok(matched) => {
+            let handler = matched.value;
+            let response = handler(request)?;
+            response.to_bytes()
+        }
+        Err(_) => {
+            let mut status = StatusCode::NotFound.as_http().into_bytes();
+            status.extend_from_slice("Content-Length: 0\r\n\r\n".as_bytes());
+            status
+        }
+    };
+    Ok(res)
+}
+```
+
+If a match is found, we call the handler and return it's response. If not, we return a `404 Not Found` status code with `Content-Length` set to 0. Let's now invoke this from `handle_connection`
+
+```rust
+pub async fn handle_connection(mut socket: TcpStream, routes: Router<Handler>) -> Result<()> {
+    let mut buf = vec![0; 1024];
+    loop {
+        let n = socket.read(&mut buf).await?;
+        if n == 0 {
+            return Ok(());
+        }
+        let body = buf[..n].to_vec(); 
+        let request = Request::parse(body)?;
+        let res = route(request, routes.clone()).await?;
+        socket.write_all(&res).await?
+    }
+}
+```
+
+Here, we write the response from `route` to the socket returning it to the client. We can now update our `cmd` and bask in the "axum-like" glory of our abstractions 🤣
+
+```rust
+let mut server = HTTPServer::new();
+server.route("/api", handle)?;
+server.listen().await?;
+```
 
 ### cURL it up
+
+That's it, we can now run our server and call our api's with `cURL`
 
 
 ## Future work
