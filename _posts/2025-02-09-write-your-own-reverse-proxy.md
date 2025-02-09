@@ -9,7 +9,7 @@ Thing we'll look at, maybe
 - mTLS
 - security
 
-> ### Language choice
+> #### Language choice
 > 
 > This time, I'm choosing go, instead fo rust, for the following reasons
 > - When a problem is not sth I know in and out, I'd rather not deal with rust at the same time
