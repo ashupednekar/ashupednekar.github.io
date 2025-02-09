@@ -661,10 +661,12 @@ Happy HTTPing...😄
 
 ## Future work
 
+We can always add features like extractors, and middlewares to make it more usable in the real world. Let's leave that as an exercise, You can find the codebase on [github](https://github.com/ashupednekar/http-rs) 
 
-## Conclusion
+## Wrapping It Up 🚀
 
+And there you have it—HTTP, stripped down to its bare essentials, demystified, and rebuilt from scratch like it's 1991 all over again. Turns out, it’s just some text, a couple of newlines, and a sprinkle of networking magic. No black box, no sorcery—just a simple protocol doing simple things.
 
+But here’s the real kicker: reinventing the wheel is underrated. You don’t really understand a thing until you’ve built it yourself, and HTTP is the perfect example. Sure, you could just use Axum, Actix, or whatever’s trending on GitHub today, but where’s the fun in that? Breaking things, debugging raw sockets, and seeing your first valid HTTP response—that’s how you level up.
 
-
-
+So go ahead, keep re-inventing wheels. Who knows? You might just end up building a jet engine. 🚀
