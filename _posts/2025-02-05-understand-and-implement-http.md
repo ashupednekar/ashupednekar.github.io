@@ -186,7 +186,7 @@ pub async fn handle_connection(mut socket: TcpStream, routes: Router<Handler>) -
 }
 ```
 
-Herem we're creating a buffer of `&[u8]` to store our stream data, if it's length is 0, it means the client has closed the connection, and we can end the loop.
+Here we're creating a buffer of `&[u8]` to store our stream data, if it's length is 0, it means the client has closed the connection, and we can end the loop.
 
 Or else, we read the buffer up to te length from `socket.read`, to get our data, which we then convert to a vector, `Vec<u8>`.
 
