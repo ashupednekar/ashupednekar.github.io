@@ -35,13 +35,27 @@ That's it. There are other nuances with gateways, services and ingress resources
 
 A really nice analogy, (thought of it when `chatgpt` generated this image xD) you can think of it as a gatekeeper or a security guard who'll give you a visitor tag and redirect you to the right floor
 
-### Routing
 
-Let's start with the easy stuff, the routing.
+Let's start to code it up, by our typical pkg/cmd structure
 
-#### Configuration
 
-Well, easier relatively speaking 😉. Here's what we need to cover
+```bash
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── cmd
+    │   └── mod.rs
+    ├── main.rs
+    └── pkg
+        └── mod.rs
+
+5 directories, 7 files
+```
+
+
+### Configuration
+
+Here's what we need to cover
 - http and tcp routing
 - path rewrites for http
 - multiple virtualhosts or listen addreses
@@ -61,8 +75,12 @@ name: one-ingress
 kind: http
 spec:
   path: /one
-  host: localhost
-  port: 3000
+  listen:
+    host: localhost
+    port: 80
+  route:
+    host: localhost
+    port: 3000
   tls: 
     enabled: false
 ```
@@ -77,9 +95,10 @@ name: two-ingress
 kind: http
 spec:
   path: /two
-  host: localhost
-  port: 3001
-  rewrite: /
+  route:
+    host: localhost
+    port: 3001
+    rewrite: /
   tls: 
     enabled: false
 ```
@@ -101,10 +120,20 @@ spec:
 
 This is when you want to route raw `TCP` connections at a different port, e.g. Say if you're providing redis as a service, for example
 
+Let's now go about representing this more concretely, starting with a `conf/spec.rs` under pkg
+
+```bash
+└── pkg
+    ├── conf
+    │   ├── mod.rs
+    │   └── spec.rs
+```
+
+
 
 #### Server
 
-#### 
+####  
 
 
 
