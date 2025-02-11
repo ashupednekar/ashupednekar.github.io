@@ -99,6 +99,7 @@ spec:
     enabled: false
 ```
 
+This is when you want to route raw `TCP` connections at a different port, e.g. Say if you're providing redis as a service, for example
 
 
 #### Server
