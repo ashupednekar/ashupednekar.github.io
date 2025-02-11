@@ -41,6 +41,66 @@ Let's start with the easy stuff, the routing.
 
 #### Configuration
 
+Well, easier relatively speaking 😉. Here's what we need to cover
+- http and tcp routing
+- path rewrites for http
+- multiple virtualhosts or listen addreses
+
+Let's keep the configuration simple. We can go about it two ways:
+- Like nginx.conf, where keep all the locations blocks within a virtualhost together
+- Or like ingresss resourses, where each route gets its own file
+
+> This is very much like choosing between seperation of concern and locality of behaviour in code structuring. I'll go with the latter
+
+We'll have a conf directory with individual conf file for hypothetical services covering each scenario
+
+##### normal http proxy 
+
+```yaml
+name: one-ingress
+kind: http
+spec:
+  path: /one
+  host: localhost
+  port: 3000
+  tls: 
+    enabled: false
+```
+This is something off the top of my head, keed eyed among you must've noticed the obvious traits borrowed from the kubernetes ingress spec.
+
+> Let's get back to the tls aspect at a later point, leaving that disabled for now
+
+##### http proxy with rewrite
+
+```yaml
+name: two-ingress
+kind: http
+spec:
+  path: /two
+  host: localhost
+  port: 3001
+  rewrite: /
+  tls: 
+    enabled: false
+```
+
+> Rewrite rules are meant to tweak the path to help with scenarious where you have clashing base paths, usually `/`. 
+
+For example, say I want to host argo-cd at `/argo` but the appplication itself is accepting connections at `/`. You still need to take care of redirections at to make sure it includes the prefix.
+
+##### tcp proxy
+
+```yaml
+name: redis-ingress
+kind: tcp
+spec:
+  port: 6379
+  tls:
+    enabled: false
+```
+
+
+
 #### Server
 
 #### 
