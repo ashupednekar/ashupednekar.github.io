@@ -9,14 +9,6 @@ Thing we'll look at, maybe
 - mTLS
 - security
 
-> #### Language choice
-> 
-> This time, I'm choosing go, instead fo rust, for the following reasons
-> - When a problem is not sth I know in and out, I'd rather not deal with rust at the same time
-> - For TLS, e.g. I'd want to use the std library as much as possible instead of relying on some crate that does everything for me.
-> 
-> Once we have a working version, maybe we can re-write it in rust later, or zig... who knows 🤷
-
 ### Intro
 
 A reverse proxy server is a server that sits in front of our applications, usually micro-services, and takes in external traffic, terminates SSL, and routes to the appropriate service. 
@@ -247,11 +239,122 @@ where
 
 Apart from the generic decor, this function's pretty straightforward. We return the appropriate variants baseed of the `kind` value and triggering `serde_yaml` deserialization for the serde `Value` subset of your yaml
 
+> If you think this was a lot, don't worry... it was. representing data with proper types can be tricky
+
 #### Server
 
-####  
+Before we proceed to roll out our tcp server, let's first plan our application state
 
+##### State
 
+We're going to walk through a conf directory, and load yaml manifests into a data structure that we can refer throughout
+
+Cool, so we're gonna mainly need two things, our http routes and tcp routes. The former being a simple port to port mapping to route traffic. 
+
+For Http routes we're going to use the `Router` map from the `matchit` crate, like we did in our http implementation. It's an optimized map designed to store generic types against hashed strings. It's used by popular frameworks like axum/actix for their routing as well
+
+```rust
+struct State{
+    tcp_routes: HashMap<i32, i32>,
+    http_routes: Router<HttpRoute>
+}
+```
+
+Let's add a `load` function that walks the config directory with `yaml` manifests, along with a `new` function
+
+```rust
+impl State {
+    fn new() -> State {
+        State {
+            tcp_routes: HashMap::new(),
+            http_routes: Router::new(),
+        }
+    }
+
+    fn load() -> Result<State>{
+      Ok(Self::new())
+    } 
+}
+```
+
+> I'm gonna stick to the `unix` style `$HOME/.config/liteginx` path for our configs, to keep things simple.
+
+Alright, here's what we need to do.
+
+- setup our config path. We're gonna look for an env, or default to `.config/liteginx`
+- make sure we only look at `yaml` files, ignore others
+- read each filem and deserialize them to our `Config` struct
+- split them into tcp and http routes and populate them in our `State` struct
+
+> Fair warning, I prefer to use functional chains for something like this, could look like a lot, but it's not, just go through each line with the above context
+
+```rust
+fn load() -> Result<State> {
+    let config_path =
+        env::var("LITEGINX_CONF_DIR").unwrap_or(format!("{}/.config/liteginx", env!("HOME")));
+    Ok(fs::read_dir(&config_path)?
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "yaml"))
+        .filter_map(|yaml_path| fs::read_to_string(yaml_path.path()).ok())
+        .filter_map(|yaml| serde_yaml::from_str::<Config>(&yaml).ok())
+        .fold(Self::new(), |mut state, config| {
+            match config.spec {
+                Spec::Tcp(spec) => {
+                    state.tcp_routes.insert(spec.port, spec.port);
+                }
+                Spec::Http(spec) => {
+                    state.http_routes.insert(spec.path, spec.route).ok();
+                }
+            }
+            state
+        }))
+}
+```
+
+We could've gone with a procedural loop, but then what's the point of using rust xD. Also, I feel we should strive to optimize our code for reading then writing. 
+
+Few concepts, just in case
+
+- `filter_map` accepts a closure that returns an option, and filters out the all the `None`'s
+- `filter` accepts closures and only keeps the items for which it returned `true`
+- `fold` is the intense one, coming right from haskel land xD. You can think of it like a map for mutating something as we go through the iterator, perfect for our use-case here. We initiate a state object, mark it as mutable take in config, and mutate state as we go along.
+
+> note: One misconception people generally have, intuitively is that each of these runs iterate over and over, that's not the case. The whole thing is a single iteration, just makes it nicer to work with, with some free performance optimizations under the hood
+
+Here's a `chatgpt` procedural equivalent, if you need it
+
+```rust
+fn load() -> Result<State> {
+    let config_path =
+        env::var("LITEGINX_CONF_DIR").unwrap_or(format!("{}/.config/liteginx", env!("HOME")));
+    
+    let mut state = State::new();
+
+    for entry in fs::read_dir(&config_path)? {
+        let entry = entry?;
+        if entry.path().extension().map_or(false, |ext| ext == "yaml") {
+            let yaml = fs::read_to_string(entry.path())?;
+            let config: Config = serde_yaml::from_str(&yaml)?;
+            match config.spec {
+                Spec::Tcp(spec) => {
+                    state.tcp_routes.insert(spec.port, spec.port);
+                }
+                Spec::Http(spec) => {
+                    state.http_routes.insert(spec.path, spec.route).ok();
+                }
+            }
+        }
+    }
+
+    Ok(state)
+}
+```
+
+One could argue this is simpler to look at, honestly... I might agree. but what if the question mark didn't exist? Looking at you, go xD
+
+Anyway, let's get back on track
+
+### Routing
 
 ### TLS
 
