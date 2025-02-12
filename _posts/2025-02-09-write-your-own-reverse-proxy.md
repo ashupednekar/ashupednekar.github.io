@@ -72,8 +72,8 @@ We'll have a conf directory with individual conf file for hypothetical services 
 
 ```yaml
 name: one-ingress
-kind: http
 spec:
+  kind: http
   path: /one
   listen:
     host: localhost
@@ -81,8 +81,8 @@ spec:
   route:
     host: localhost
     port: 3000
-  tls: 
-    enabled: false
+tls: 
+  enabled: false
 ```
 This is something off the top of my head, keed eyed among you must've noticed the obvious traits borrowed from the kubernetes ingress spec.
 
@@ -92,15 +92,15 @@ This is something off the top of my head, keed eyed among you must've noticed th
 
 ```yaml
 name: two-ingress
-kind: http
 spec:
+  kind: http
   path: /two
   route:
     host: localhost
     port: 3001
     rewrite: /
-  tls: 
-    enabled: false
+tls: 
+  enabled: false
 ```
 
 > Rewrite rules are meant to tweak the path to help with scenarious where you have clashing base paths, usually `/`. 
@@ -111,11 +111,11 @@ For example, say I want to host argo-cd at `/argo` but the appplication itself i
 
 ```yaml
 name: redis-ingress
-kind: tcp
 spec:
+  kind: tcp
   port: 6379
-  tls:
-    enabled: false
+tls:
+  enabled: false
 ```
 
 This is when you want to route raw `TCP` connections at a different port, e.g. Say if you're providing redis as a service, for example
@@ -129,7 +129,123 @@ Let's now go about representing this more concretely, starting with a `conf/spec
     │   └── spec.rs
 ```
 
+Let's start with our main `Config` struct
 
+```rust
+#[derive(Deserialize, Clone)]
+pub struct Config{
+    pub name: String,
+    pub spec: Spec,
+    pub tls: Tls
+}
+```
+I'll defer the tls stuff for later, here's a simple struct for now
+
+```rust
+#[derive(Deserialize, Clone)]
+pub struct Tls{
+    pub enabled: bool
+}
+
+```
+
+The spec could vary based on whether it's an http or a raw tcp route. Here's the enum
+
+```rust
+#[derive(Deserialize, Clone)]
+pub enum Spec{
+    Http(Http),
+    Tcp(Tcp)
+}
+```
+
+Let's start with the TCP route, cuz it's simple with just a port, along with kind
+
+```rust
+#[derive(Deserialize, Clone)]
+pub struct Tcp{
+    #[serde(default = "default_tcp_kind")]
+    pub kind: String,
+    pub port: i32
+}
+```
+
+The kind for a Tcp spec variant should have kind being "tcp"
+
+```rust
+fn default_tcp_kind() -> String {
+    "tcp".to_string()
+}
+```
+
+Now let's go with Http
+
+Apart from the http route, we need two things, the destingation route host/port and the host/port our server should listen at to accept ingress traffic
+
+```rust
+#[derive(Deserialize, Clone)]
+pub struct HttpRoute{
+    pub host: String,
+    pub port: i32,
+    pub rewrite: Option<String>
+}
+
+#[derive(Deserialize, Clone)]
+pub struct VirtualHost{
+    pub host: String,
+    pub port: i32
+}
+
+#[derive(Deserialize, Clone)]
+pub struct Http{
+    #[serde(default = "default_http_kind")]
+    pub kind: String,
+    pub path: String,
+    pub listen: VirtualHost,
+    pub route: HttpRoute
+}
+```
+
+Again, we have a default function for the kind attribute
+
+```rust
+fn default_tcp_kind() -> String {
+    "tcp".to_string()
+}
+```
+
+When deserializing from yaml, we want to get the `Http` or the `Tcp` variants based on the kind value, and check the rest of the validations subsequently
+
+We'll need to add a custom deserializer for the spec attribute
+
+```rust
+#[derive(Deserialize, Clone)]
+pub struct Config{
+    pub name: String,
+    #[serde(deserialize_with = "deserialize_spec")]
+    pub spec: Spec,
+    pub tls: Tls
+}
+
+
+fn deserialize_spec<'de, D>(deserializer: D) -> Result<Spec, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let v: Value = Deserialize::deserialize(deserializer)?;
+    if let Some(kind) = v.get("kind").and_then(|k| k.as_str()) {
+        match kind {
+            "http" => Ok(Spec::Http(serde_yaml::from_value(v).map_err(D::Error::custom)?)),
+            "tcp" => Ok(Spec::Tcp(serde_yaml::from_value(v).map_err(D::Error::custom)?)),
+            _ => Err(D::Error::custom("Unknown kind")),
+        }
+    } else {
+        Err(D::Error::custom("Missing `kind` field"))
+    }
+}
+```
+
+Apart from the generic decor, this function's pretty straightforward. We return the appropriate variants baseed of the `kind` value and triggering `serde_yaml` deserialization for the serde `Value` subset of your yaml
 
 #### Server
 
