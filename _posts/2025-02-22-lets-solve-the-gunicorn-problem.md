@@ -36,4 +36,43 @@ If you look at most modern languages that come with green threads built in, eith
 
 Each of these containers are single processes, that do take advantage of the available compute through a combination of os threads and green threads.
 
+### So what are we building here?
+
+I've posted recently digging through HTTP and building a basic web framework on top of it. Here's the [link](https://ashupednekar.github.io/posts/understand-and-implement-http/). At the end of this, we had a small web framework, that used tokio for concurrency to spin up green threads for each request. There's pyo3.. so why not put two and two together to bring that to python?
+
+#### Previous attempts
+
+One way would be to start a rust server that laods a shared mutex of route map to python functions, that can be invoked when the route is triggered. 
+
+Here's a simple codebase I wrote some time back, called [axumapi](https://github.com/ashupednekar/axumapi). Yes, the end result is a fast, liteweight http framework, but it would take a lot of effort and time to make things like this feature complete.
+
+There are projects like [robyn](https://robyn.tech/), which have gotten pretty far. 
+
+But the problem with python developers in general is they are shielded from what's actually happening to such an extent, that they end up becoming very dependent on their framework of choice, and cannot even image using something else.
+
+#### gunicorn alternatives
+
+> Gunicorn is great, until it isn't. Why? cuz you don't know how it works
+
+I can't emphasize enough how many times I've faced production outages due to weird edge cases due to some black box case happening in gunicorn, or uvicorn. 
+
+There are other alternatives, here are a few one liner descriptions of the various worker models gunicorn provides 
+
+**Faiw warning, these are very opinionated, if you don't agree with these, that's okay**
+
+- gunicorn sync: runs prefork processes
+> not useful in containers
+
+- gunicorn gthread: uses python thread pool 
+> good for syncronous wsgi frameworks like django ✅
+> If you're in this camp, you are good until your rps requirements are low enough, or can scale compute vertically
+
+- gunicorn gevent: uses gevent, the library that implements green threads to python
+> the right apprach for containers, but needs code changes and monkey patching
+
+- gunicorn uvicorn: uses uvicorn workers, which uses uvloop as the asyncio eventloop
+> great for async frameworks like fastapi ✅
+> If you are in this camp, you're good. Async starlette plus uvicorn is pretty good for most cloud native use cases
+
+
 
