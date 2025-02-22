@@ -74,5 +74,12 @@ There are other alternatives, here are a few one liner descriptions of the vario
 > great for async frameworks like fastapi ✅
 > If you are in this camp, you're good. Async starlette plus uvicorn is pretty good for most cloud native use cases
 
+What we're gonna build is a simplified form of something called [granian](https://github.com/emmett-framework/granian), which provides a wsgi/asgi interface built in rust.
+
+What makes this possible is something called the "web server gateway interface"
+
+### So what's WSGI?
+
+
 
 
