@@ -242,6 +242,7 @@ Here's the TLDR
 ```rust
 pub struct WSGIApp {
     app: Arc<Py<PyAny>>,
+    port: u16
 }
 ```
 
@@ -249,10 +250,10 @@ The wsgiapp stuct stores the wsgi `application` callable, i.e. `Py<PyAny>`
 
 ```rust
 impl WSGIApp {
-    pub fn new(py: Python, module: &str, app: &str) -> PyResult<Self> {
+    pub fn new(py: Python, module: &str, app: &str, port: u16) -> PyResult<Self> {
         let module = py.import(module)?;
         let app = Arc::new(module.getattr(app)?.into_pyobject(py)?.into());
-        Ok(Self { app })
+        Ok(Self { app, port })
     }
 }
 ```
@@ -295,4 +296,74 @@ We now need to start a python gil to build the environ `PyDict`, and call the ap
 
 Also, we need to spawn a new thread for handing each request to gain fearless concurrency, as they say it
 
+```rust
+let (status, response_headers, body) = tokio::task::spawn_blocking(move || {
+    Python::with_gil(|py| -> PyResult<(u16, Vec<(String, String)>, Vec<u8>)> {
+        let environ = PyDict::new(py);
+        for (k, v) in headers.into_iter(){
+            environ.set_item(k.as_str().replace("-", "_").to_uppercase(), v.to_string())?;
+        }
+        environ.set_item("SERVER_NAME", "")?;
+        environ.set_item("SERVER_PORT", port)?;
+        environ.set_item("HTTP_HOST", "localhost")?;
+        environ.set_item("PATH_INFO", path)?;
+        environ.set_item("REQUEST_METHOD", method)?;
 
+        let py_body = PyBytes::new(py, &body_bytes);
+
+        let io = py.import("io")?;
+        let wsgi_input = io.getattr("BytesIO")?.call1((py_body,))?;
+        environ.set_item("wsgi.input", wsgi_input)?;
+
+        environ.set_item("wsgi.version", (1, 0))?;
+        environ.set_item("wsgi.errors", py.None())?;
+
+        tracing::debug!("prepared environ: {:?}", environ);
+
+        let wsgi_response = Py::new(py, WsgiResponse::new())?;
+        let start_response = wsgi_response.getattr(py, "start_response")?;
+        let res = app.call1(py, (environ, start_response, ))?;
+        tracing::info!("called Python WSGI function");
+
+        let status_code = wsgi_response
+            .getattr(py, "get_status")?
+            .call0(py)?
+            .extract::<String>(py)?
+            .split_whitespace()
+            .next()
+            .and_then(|s| s.parse::<u16>().ok())
+            .unwrap_or_default();
+        tracing::info!("status code: {}", &status_code);
+
+        tracing::info!("res: {:?}", &res);
+        let response_bytes: Vec<u8> = res
+            .getattr(py, "content")?
+            .extract::<Vec<u8>>(py)?;
+        Ok((status_code, vec![], response_bytes))   
+    })
+}).await.map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))??;
+```
+
+Here's a quick description for each keys in our environ dictionary=
+
+SERVER_NAME → Server hostname
+SERVER_PORT → Server port
+HTTP_HOST → Request host
+PATH_INFO → Requested URL path.
+REQUEST_METHOD → HTTP method
+wsgi.input → Request body as a BytesIO stream.
+wsgi.version → WSGI version ((1, 0)).
+wsgi.errors → Error stream (set to None).
+
+We then proceed to extract the reponse body and status code from result of the python invocation
+
+Finally, we build the hyper response and send it back to the client
+
+```rust
+    tracing::info!("{:?}| {:?} | {:?}", status, response_headers, body);
+    let mut builder = Response::builder().status(status);
+    Ok(builder.body(Body::from(body)).unwrap())
+}
+```
+
+#### Response
