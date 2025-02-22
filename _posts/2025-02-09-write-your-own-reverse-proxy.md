@@ -67,12 +67,10 @@ name: one-ingress
 spec:
   kind: http
   path: /one
-  listen:
-    host: localhost
-    port: 80
-  route:
-    host: localhost
-    port: 3000
+  listen_port: 80
+  routes:
+  - target_host: localhost
+    target_port: 3000
 tls: 
   enabled: false
 ```
@@ -87,9 +85,10 @@ name: two-ingress
 spec:
   kind: http
   path: /two
-  route:
-    host: localhost
-    port: 3001
+  listen_port: 80
+  routes:
+  - target_host: localhost
+    target_port: 3001
     rewrite: /
 tls: 
   enabled: false
@@ -105,7 +104,10 @@ For example, say I want to host argo-cd at `/argo` but the appplication itself i
 name: redis-ingress
 spec:
   kind: tcp
-  port: 6379
+  listen_port: 6379
+  routes: 
+   - target_host: localhost
+     target_port: 6379
 tls:
   enabled: false
 ```
@@ -245,25 +247,35 @@ Apart from the generic decor, this function's pretty straightforward. We return 
 
 Before we proceed to roll out our tcp server, let's first plan our application state
 
-##### State
+##### Loader
 
-We're going to walk through a conf directory, and load yaml manifests into a data structure that we can refer throughout
+We're going to walk through a conf directory, and load yaml manifests into a data structure that we can refer throughout, once we're done with this, we should have our server struct equipped with all the configuration it'll need to do the reverse proxying
 
 Cool, so we're gonna mainly need two things, our http routes and tcp routes. The former being a simple port to port mapping to route traffic. 
 
 For Http routes we're going to use the `Router` map from the `matchit` crate, like we did in our http implementation. It's an optimized map designed to store generic types against hashed strings. It's used by popular frameworks like axum/actix for their routing as well
 
 ```rust
-struct State{
-    tcp_routes: HashMap<i32, i32>,
-    http_routes: Router<HttpRoute>
+struct Server{
+  tcp_routes: HashMap<i32, Vec<TcpRoute>>,
+  http_routes: HashMap<i32, Router<Vec<HttpRoute>>>,
 }
 ```
 
-Let's add a `load` function that walks the config directory with `yaml` manifests, along with a `new` function
+Let's go through why I chose this data structure here
+
+So, for tcp routes, what the proxy is going to essentially do is listen at ports, and route raw TCP traffic to the list specified `TcpRoute`, which is essentially just the host and the port of the target service. The reason this is a Vector is for load balancing, we'll come to that right after this. 
+
+Similarly, for http routes, similar to nginx or httpd virtualhosts, we'll have multiple server threads listening at each listen ports, and then route all the http requests forward. Time to implement the loader. Again, the `Vec` is for load balancing. 
+
+> The examples above have a single entry for routes, we're gonna look at load balancing later
+
+
+Let's now start implementing our `new` function to instantiate our `Server`, and load the routing configuration by walking our manifests directory
+
 
 ```rust
-impl State {
+impl Server {
     fn new() -> State {
         State {
             tcp_routes: HashMap::new(),
@@ -271,90 +283,62 @@ impl State {
         }
     }
 
-    fn load() -> Result<State>{
-      Ok(Self::new())
-    } 
-}
+  fn new() -> Result<Server> {
+      let config_path =
+          env::var("LITEGINX_CONF_DIR").unwrap_or(format!("{}/.config/liteginx", env!("HOME")));
+      let configs: Vec<Config> = fs::read_dir(&config_path)?
+          .filter_map(|entry| entry.ok())
+          .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "yaml"))
+          .filter_map(|yaml_path| fs::read_to_string(yaml_path.path()).ok())
+          .filter_map(|yaml| serde_yaml::from_str::<Config>(&yaml).ok())
+          .collect();
+
+      let mut state = Server{
+          tcp_routes: HashMap::new(),
+          http_routes: HashMap::new(),
+      }
+;
+      for config in configs{
+          match config.spec{
+              Spec::Http(spec) => {
+                  state
+                      .http_routes
+                      .entry(spec.listen.port)
+                      .or_insert_with(Router::new)
+                      .insert(spec.path, spec.routes)?;
+              },
+              Spec::Tcp(spec) => {
+                  state
+                      .tcp_routes
+                      .entry(spec.listen_port)
+                      .or_insert(spec.routes);
+              }
+          }
+      }
+      Ok(state)
+  }
 ```
 
-> I'm gonna stick to the `unix` style `$HOME/.config/liteginx` path for our configs, to keep things simple.
+I was planning on going crazy with the iterator functions with folds and everything, but it honestly got too hard to look at, but I can't go full procedural either 🙃. So this is what I wrote 
 
-Alright, here's what we need to do.
+Let's go through it.. Here's what's heppening, in order
+- get config path from env, or default to unix path
+- get the `Vec<Config>` from the `Readdir` iterator like so:
+  - setup our config path. We're gonna look for an env, or default to the `unix` style `$HOME/.config/liteginx`
+  - make sure we only look at `yaml` files, ignore others
+  - read each file and deserialize them to our `Config` struct
+  - Populate them in our `Server` struct based whether on the `config.spec` variants, be http or tcp. Creates a map of port to vec of tcproutes and a map of port to matchit router respectively
 
-- setup our config path. We're gonna look for an env, or default to `.config/liteginx`
-- make sure we only look at `yaml` files, ignore others
-- read each filem and deserialize them to our `Config` struct
-- split them into tcp and http routes and populate them in our `State` struct
-
-> Fair warning, I prefer to use functional chains for something like this, could look like a lot, but it's not, just go through each line with the above context
-
-```rust
-fn load() -> Result<State> {
-    let config_path =
-        env::var("LITEGINX_CONF_DIR").unwrap_or(format!("{}/.config/liteginx", env!("HOME")));
-    Ok(fs::read_dir(&config_path)?
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "yaml"))
-        .filter_map(|yaml_path| fs::read_to_string(yaml_path.path()).ok())
-        .filter_map(|yaml| serde_yaml::from_str::<Config>(&yaml).ok())
-        .fold(Self::new(), |mut state, config| {
-            match config.spec {
-                Spec::Tcp(spec) => {
-                    state.tcp_routes.insert(spec.port, spec.port);
-                }
-                Spec::Http(spec) => {
-                    state.http_routes.insert(spec.path, spec.route).ok();
-                }
-            }
-            state
-        }))
-}
-```
-
-We could've gone with a procedural loop, but then what's the point of using rust xD. Also, I feel we should strive to optimize our code for reading then writing. 
-
-Few concepts, just in case
-
-- `filter_map` accepts a closure that returns an option, and filters out the all the `None`'s
-- `filter` accepts closures and only keeps the items for which it returned `true`
-- `fold` is the intense one, coming right from haskel land xD. You can think of it like a map for mutating something as we go through the iterator, perfect for our use-case here. We initiate a state object, mark it as mutable take in config, and mutate state as we go along.
-
-> note: One misconception people generally have, intuitively is that each of these runs iterate over and over, that's not the case. The whole thing is a single iteration, just makes it nicer to work with, with some free performance optimizations under the hood
-
-Here's a `chatgpt` procedural equivalent, if you need it
-
-```rust
-fn load() -> Result<State> {
-    let config_path =
-        env::var("LITEGINX_CONF_DIR").unwrap_or(format!("{}/.config/liteginx", env!("HOME")));
-    
-    let mut state = State::new();
-
-    for entry in fs::read_dir(&config_path)? {
-        let entry = entry?;
-        if entry.path().extension().map_or(false, |ext| ext == "yaml") {
-            let yaml = fs::read_to_string(entry.path())?;
-            let config: Config = serde_yaml::from_str(&yaml)?;
-            match config.spec {
-                Spec::Tcp(spec) => {
-                    state.tcp_routes.insert(spec.port, spec.port);
-                }
-                Spec::Http(spec) => {
-                    state.http_routes.insert(spec.path, spec.route).ok();
-                }
-            }
-        }
-    }
-
-    Ok(state)
-}
-```
-
-One could argue this is simpler to look at, honestly... I might agree. but what if the question mark didn't exist? Looking at you, go xD
-
-Anyway, let's get back on track
 
 ### Routing
+
+We'll need multiple servers, listening at each `listen_port` in our loaded route config. How do we go about doing that? 
+
+Let's first create the scaffolding for starting and managing tcp servers, let's start by creating a `tcp.rs` module under `/server`
+
+
+
+
 
 ### TLS
 
