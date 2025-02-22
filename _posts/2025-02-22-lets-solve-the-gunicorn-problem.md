@@ -388,7 +388,7 @@ let start_response = wsgi_response.getattr(py, "start_response")?;
 
 ### Conclusion
 
-That's it, now we compile and run it. Or you can download the library from [pip](https://pypi.org/project/serve-rs/)
+That's it, now we compile and run it. Or you can download the library from [pip](https://pypi.org/project/serve-rs/). Here are the [docs](https://ashupednekar.github.io/serve-rs/)
 
 Gunicorn does its job well, but like any abstraction, it’s easy to use without truly understanding what’s happening under the hood. Digging into its internals made me realize that a lot of its complexity comes from solving problems I don’t always need. So I built serve-rs—a simple, transparent alternative that does just enough without the extra baggage. The real takeaway? Whether you use Gunicorn, serve-rs, or something else entirely, understanding how things work makes you a better engineer—and sometimes, building your own tool is the best way to do that. 🚀
 
