@@ -131,7 +131,7 @@ tracing-test = "0.2.5"
 
 #### Cli command
 
-Let's start by defining a star function in `lib.rs`. The actual function will be async, so we need to start the tokio runtime to be able to call async functions
+Let's start by defining a start function in `lib.rs`. The actual function will be async, so we need to start the tokio runtime to be able to call async functions
 
 ```rust
 #[pyfunction]
