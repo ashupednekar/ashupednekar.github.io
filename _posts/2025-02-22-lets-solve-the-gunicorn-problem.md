@@ -99,17 +99,7 @@ def application(environ, start_response):
 
 It's a little tricky, but you'll get the hang of it once you see the code
 
-#### python code example
-
-```python
-
-```
-
-You can run it like so...
-
-See, it's that simple. This is a single process sync wsgi server without any bells end whistles, say like the django development server, without it's reload functionality. What this is lacking is concurrent request support. We could use the python threadpool, but I'm gonna choose rust as usual.
-
-### Let's now start the actual project
+### Let's start coding then
 
 We need a python library with a serve command, let's start by creating a new `pyo3` project with `maturin`
 
