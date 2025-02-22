@@ -26,7 +26,14 @@ If you have a uvicorn pod with 4 workers, that's just not right. Imagine your au
 
 Here are a [blog post](https://dev.to/check/from-chaos-to-control-the-importance-of-tailored-autoscaling-in-kubernetes-2kpn?utm_source=chatgpt.com) going into more details on this one.
 
-### What happens today (generally)
+
+[current](https://assets.grok.com/users/56e197c1-b0e7-49e3-ae35-52eaf2b5def3/66ACNA8iFRpVVmul-generated_image.jpg)
+
+
+### What should happen
 
 If you look at most modern languages that come with green threads built in, either in the standard library (`go`) or through defacto default liraries (`rust`), they provide robust concurrency models
+
+Each of these containers are single processes, that do take advantage of the available compute through a combination of os threads and green threads.
+
 
