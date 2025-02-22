@@ -367,3 +367,38 @@ Finally, we build the hyper response and send it back to the client
 ```
 
 #### Response
+
+We create a response object with shared mutices for status and headers
+
+```rust
+#[pyclass]
+pub struct WsgiResponse {
+    status: Mutex<Option<String>>,
+    headers: Mutex<Vec<(String, String)>>,
+}
+
+#[pymethods]
+impl WsgiResponse {
+    #[new]
+    pub fn new() -> Self {
+        WsgiResponse {
+            status: Mutex::new(None),
+            headers: Mutex::new(Vec::new()),
+        }
+    }
+}
+```
+
+Thanks to the `pyclass`/`pymethods` macro, this behaves like just another python function when invoked by our wsgi application, i.e. the framework like django when we pass it in the handle request function
+
+```rust
+let wsgi_response = Py::new(py, WsgiResponse::new())?;
+let start_response = wsgi_response.getattr(py, "start_response")?;
+```
+
+### Conclusion
+
+That's it, now we compile and run it. Or you can download the library from [pip](https://pypi.org/project/serve-rs/)
+
+Gunicorn does its job well, but like any abstraction, it’s easy to use without truly understanding what’s happening under the hood. Digging into its internals made me realize that a lot of its complexity comes from solving problems I don’t always need. So I built serve-rs—a simple, transparent alternative that does just enough without the extra baggage. The real takeaway? Whether you use Gunicorn, serve-rs, or something else entirely, understanding how things work makes you a better engineer—and sometimes, building your own tool is the best way to do that. 🚀
+
