@@ -51,13 +51,17 @@ Here's a simple codebase I wrote some time back, called [axumapi](https://github
 
 There are projects like [robyn](https://robyn.tech/), which have gotten pretty far. 
 
-But the problem with python developers in general is they are shielded from what's actually happening to such an extent, that they end up becoming very dependent on their framework of choice, and cannot even image using something else.
+But the problem with python developers in general is they are shielded from what's actually happening to such an extent, that they end up becoming very dependent on their framework of choice, and cannot even image using something else. so we need something that can be a drop-in replacement to the process manager/ server instead
 
 #### gunicorn alternatives
 
 > Gunicorn is great, until it isn't. Why? cuz you don't know how it works
 
-I can't emphasize enough how many times I've faced production outages due to weird edge cases due to some black box case happening in gunicorn, or uvicorn. 
+I can't emphasize enough how many times I've faced production outages due to weird edge cases happening in gunicorn, or uvicorn. It is open source and we can always go through the source to figure out what's happening, but that's only if there's a repeatable traceback to follow. 
+
+A process manager is a pretty tricky problem, and can cause a few hidden cases due to some dependencies or something odd happening in your api handlers. 
+
+Let's take a look at what's available
 
 Here are a few one liner descriptions of the various worker models gunicorn provides 
 
