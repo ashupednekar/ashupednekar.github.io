@@ -10,7 +10,9 @@ But it's not all bad. As I said, python is great at abstracting over dll librari
 
 ### Intro
 
-Cool. So what's gunicorn? If your background is anything non python, be it node js or go, the idea of having to run a seperate server just to run your code on the server, apart from the actual reverse proxy web server may be alien to you, and that makes sense. Here's the problem servers like `gunicorn` or `uvicorn` solve
+Cool. So what's gunicorn? If your background is anything non python, be it node js or go, the idea of having to run a seperate server just to run your code on the server, apart from the actual reverse proxy web server may be alien to you, and that makes sense. 
+
+Sercers like `gunicorn` or `uvicorn` solve the following problem
 
 Web traffic, usually involves calling handler functions, or API business logic for each user request. These are independent processing or queries, so we need to be able to concurrently handle these requests.
 
@@ -39,11 +41,11 @@ Each of these containers are single processes, that do take advantage of the ava
 
 ### So what are we building here?
 
-I've posted recently digging through HTTP and building a basic web framework on top of it. Here's the [link](https://ashupednekar.github.io/posts/understand-and-implement-http/). At the end of this, we had a small web framework, that used tokio for concurrency to spin up green threads for each request. There's pyo3.. so why not put two and two together to bring that to python?
+I've recently posted in my blog digging through HTTP and building a basic web framework on top of it. Here's the [link](https://ashupednekar.github.io/posts/understand-and-implement-http/). At the end of this, we had a small web framework, that used tokio for concurrency to spin up green threads for each request. There's pyo3.. so why not put two and two together to bring that to python?
 
 #### Previous attempts
 
-One way would be to start a rust server that laods a shared mutex of route map to python functions, that can be invoked when the route is triggered. 
+One way would be to start a rust server that loads a shared mutex of route map to python functions, that can be invoked when the route is triggered. 
 
 Here's a simple codebase I wrote some time back, called [axumapi](https://github.com/ashupednekar/axumapi). Yes, the end result is a fast, liteweight http framework, but it would take a lot of effort and time to make things like this feature complete.
 
@@ -57,7 +59,7 @@ But the problem with python developers in general is they are shielded from what
 
 I can't emphasize enough how many times I've faced production outages due to weird edge cases due to some black box case happening in gunicorn, or uvicorn. 
 
-There are other alternatives, here are a few one liner descriptions of the various worker models gunicorn provides 
+Here are a few one liner descriptions of the various worker models gunicorn provides 
 
 **Faiw warning, these are very opinionated, if you don't agree with these, that's okay**
 
