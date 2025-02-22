@@ -27,7 +27,8 @@ If you have a uvicorn pod with 4 workers, that's just not right. Imagine your au
 Here are a [blog post](https://dev.to/check/from-chaos-to-control-the-importance-of-tailored-autoscaling-in-kubernetes-2kpn?utm_source=chatgpt.com) going into more details on this one.
 
 
-![current](https://assets.grok.com/users/56e197c1-b0e7-49e3-ae35-52eaf2b5def3/66ACNA8iFRpVVmul-generated_image.jpg)
+
+![image](https://github.com/user-attachments/assets/c7e47d06-67fa-4c42-87ce-99f4fb866f55)
 
 
 ### What should happen
