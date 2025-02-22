@@ -84,4 +84,215 @@ There was a need for a standard interfact so that different implementations of p
 
 ![image](https://github.com/user-attachments/assets/939cd4ca-53ad-4ee7-858d-bf2a06be2457)
 
+It took quite a bit of prompts to get gpt to simplify it, that's how convoluted the various implementation and documentation are, but at it's core, its a very nice interface.
+
+A wsgi application is basically a `Callable` with two arguments
+
+```python
+def application(environ, start_response):
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    return [b"Hello, WSGI!"]
+```
+
+- The `environ` dictionary contains various metadata information like request path, headers, etc. 
+- `start_response` is a function takes in a shared reference to status and headers, that the frameworks are then going to write to. 
+
+It's a little tricky, but you'll get the hang of it once you see the code
+
+#### python code example
+
+```python
+
+```
+
+You can run it like so...
+
+See, it's that simple. This is a single process sync wsgi server without any bells end whistles, say like the django development server, without it's reload functionality. What this is lacking is concurrent request support. We could use the python threadpool, but I'm gonna choose rust as usual.
+
+### Let's now start the actual project
+
+We need a python library with a serve command, let's start by creating a new `pyo3` project with `maturin`
+
+Refer to my [pyo3 blog](https://ashupednekar.github.io/posts/lets-solve-the-gunicorn-problem/) for more details
+
+#### Depencencies
+
+I'll start by adding our dependencies, `hyper`, `tokio` and `pyo3`, along with a few tracing crates
+
+```toml
+hyper = { version = "0.14.28", features = ["full", "server"] }
+pyo3 = { version = "0.23.4", features = ["extension-module"] }
+tokio = { version = "1.43.0", features = ["full"] }
+tracing = "0.1.40"
+tracing-opentelemetry = "0.27.0"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+opentelemetry = "0.26.0"
+opentelemetry-otlp = { version = "0.26.0", features = ["default", "tracing"] }
+opentelemetry_sdk = { version = "0.26.0", features = ["rt-tokio"] }
+tracing-test = "0.2.5"
+```
+
+#### Cli command
+
+Let's start by defining a star function in `lib.rs`. The actual function will be async, so we need to start the tokio runtime to be able to call async functions
+
+```rust
+#[pyfunction]
+fn start(py: Python, path: &str, port: u16) -> PyResult<()> {
+    py.allow_threads(||{
+        tokio::task::block_in_place(move || {
+            let rt = Runtime::new().expect("failed");
+            rt.block_on(async {
+                serve(&path, port).await.unwrap();     
+            });
+        });
+        Ok(())
+    })
+}
+
+#[pymodule]
+fn servers(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    tracing_subscriber::fmt::init();
+    m.add_function(wrap_pyfunction!(start, m)?)?;
+    Ok(())
+}
+```
+
+The way pyo3 works, is it includes the compiled `.so` shared library in the wheel file, along with a package with the same name.
+
+We also need a command the users can run once they install the library. We can do that by overriding the `__init__.py` to include a `serve` function, and include it as an entrypoint in `pyproject.toml`
+
+```python
+from .servers import start
+from pathlib import Path
+import argparse
+import sys
+
+
+def serve():
+    sys.path.insert(0, str(Path.cwd()))
+    parser = argparse.ArgumentParser(description="Start the server.")
+    parser.add_argument("path", type=str, help="Path to the server directory")
+    parser.add_argument("port", type=int, help="Path to the server directory")
+    args = parser.parse_args()
+    sys.exit(start(args.path, args.port))
+```
+
+We need to import the wsgi application, but the thing is our script is going to be placed in the `bin/` directory within the python virtual environment, that's what the `sys.path` insert is for. 
+
+> You could ofcourse add more arguments. Keep it simple though, or we'd end up with the same thing we're trying to replace xD
+
+Then we add it to `pyproject.toml` for including it in our wheel
+
+```toml
+[project.scripts]
+serve-rs = "servers:serve"
+```
+
+#### Server
+
+We'll soon define a wsgi application, for handing the requests. Before that, let's define our `hyper` server
+
+```rust
+use crate::pkg::wsgi::WSGIApp;
+
+pub async fn serve(path: &str, port: u16) -> PyResult<()>{
+    let (wsgi_module, wsgi_app) = if let Some((module, app)) = path.split_once(':') {
+        (module, app)    
+    } else {
+        return Err(PyValueError::new_err("Invalid path format"));
+    };
+    
+    let app = Arc::new(Python::with_gil(|py|{
+        WSGIApp::new(py, wsgi_module, wsgi_app)
+    })?);
+    
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let make_svc = make_service_fn(move |_| {
+        let app = app.clone();
+        async { 
+            Ok::<_, Infallible>(service_fn(move |req| {
+                let app = app.clone();
+                async move {
+                    app.handle_request(req).await 
+                }
+            }))
+        }
+    });
+
+    println!("WSGI Server running at http://{}", addr);
+    let server = Server::bind(&addr).serve(make_svc);
+    tokio::select! {
+        _ = server => {},
+        _ = signal::ctrl_c() => {}
+    }
+    Ok(())
+}
+
+```
+
+Here's the TLDR 
+- take our wsgi path as input
+- load the wsgi module in an Arc, cuz it has to be shared across threads
+- create a hypr server listening at the configured port, using `make_service_fn`
+- spawn the server in a new `tokio` thread, while also handling the `ctrl+c` signal
+
+#### Let's now start the wsgi module
+
+```rust
+pub struct WSGIApp {
+    app: Arc<Py<PyAny>>,
+}
+```
+
+The wsgiapp stuct stores the wsgi `application` callable, i.e. `Py<PyAny>`
+
+```rust
+impl WSGIApp {
+    pub fn new(py: Python, module: &str, app: &str) -> PyResult<Self> {
+        let module = py.import(module)?;
+        let app = Arc::new(module.getattr(app)?.into_pyobject(py)?.into());
+        Ok(Self { app })
+    }
+}
+```
+
+the `new` function loads the app and store it as an `Arc`
+
+#### Request handling
+
+We need to build the `environ` dictionary for the input
+
+##### headers
+
+```rust
+let headers: HashMap<String, String> = req.headers()
+    .iter()
+    .map(|(k, v)| {
+        let key = format!("HTTP_{}", k.as_str().replace("-", "_").to_uppercase());
+        let value = v.to_str().unwrap_or("").to_string();
+        (key, value)
+    })
+    .collect();
+```
+
+Reads the hyper request headers, which is an iterator to create a hashmap with underscored keys in upper case
+
+##### body
+
+```rust
+let body_bytes = hyper::body::to_bytes(req.into_body())
+    .await
+    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?
+    .to_vec();
+```
+
+Using the `to_bytes` utility from hyper to create bytes, and convert to a `Vec<u8>`
+
+##### Building the environ
+
+We now need to start a python gil to build the environ `PyDict`, and call the app callable with the environ and the `start_response` function, more on that later
+
+Also, we need to spawn a new thread for handing each request to gain fearless concurrency, as they say it
+
 
