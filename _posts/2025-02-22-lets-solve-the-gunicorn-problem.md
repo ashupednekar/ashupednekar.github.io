@@ -80,6 +80,6 @@ What makes this possible is something called the "web server gateway interface"
 
 ### So what's WSGI?
 
-
+There was a need for a standard interfact so that different implementations of process managers and servers could work properly with all python web frameworks, say django, flask, fastapi, etc
 
 
