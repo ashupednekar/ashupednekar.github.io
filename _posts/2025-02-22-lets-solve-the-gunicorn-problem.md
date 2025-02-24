@@ -57,7 +57,7 @@ But the problem with python developers in general is they are shielded from what
 
 > Gunicorn is great, until it isn't. Why? cuz you don't know how it works
 
-I can't emphasize enough how many times I've faced production outages due to weird edge cases happening in gunicorn, or uvicorn. It is open source and we can always go through the source to figure out what's happening, but that's only if there's a repeatable traceback to follow. 
+I can't emphasize enough how many times I've faced unpredictable bugs due to weird edge cases happening in gunicorn, or uvicorn. It is open source and we can always go through the source to figure out what's happening, but that's only if there's a repeatable traceback to follow. 
 
 A process manager is a pretty tricky problem, and can cause a few hidden cases due to some dependencies or something odd happening in your api handlers. 
 
