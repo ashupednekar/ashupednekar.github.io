@@ -53,7 +53,7 @@ There are projects like [robyn](https://robyn.tech/), which have gotten pretty f
 
 But the problem with python developers in general is they are shielded from what's actually happening to such an extent, that they end up becoming very dependent on their framework of choice, and cannot even image using something else. so we need something that can be a drop-in replacement to the process manager/ server instead
 
-#### gunicorn alternatives
+#### So what's wrong with gunicorn? 
 
 > Gunicorn is great, until it isn't. Why? cuz you don't know how it works
 
