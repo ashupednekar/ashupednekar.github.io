@@ -338,6 +338,7 @@ Here are a few things we need to keep in mind before we proceed
 
 Let's draw it out
 
+<img width="715" alt="image" src="https://github.com/user-attachments/assets/5c33786c-719a-43e7-bbc6-c1a518065ba2" />
 
 
 
