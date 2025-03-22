@@ -330,11 +330,14 @@ Let's go through it.. Here's what's heppening, in order
   - Populate them in our `Server` struct based whether on the `config.spec` variants, be http or tcp. Creates a map of port to vec of tcproutes and a map of port to matchit router respectively
 
 
-### Routing
+### So how's it gonna work?
 
-We'll need multiple servers, listening at each `listen_port` in our loaded route config. How do we go about doing that? 
+Here are a few things we need to keep in mind before we proceed
+- http is just a subset of tcp where we parse tha payload for routing and things like path rewrites
+- the main thing is to be able to pass data around channels to make sure we correctly proxy packets from our clients to the upstream backend and vice versa
 
-Let's first create the scaffolding for starting and managing tcp servers, let's start by creating a `tcp.rs` module under `/server`
+Let's draw it out
+
 
 
 
