@@ -340,6 +340,13 @@ Let's draw it out
 
 <img width="715" alt="image" src="https://github.com/user-attachments/assets/5c33786c-719a-43e7-bbc6-c1a518065ba2" />
 
+We're gonna do this in this order...
+
+- first, we need to set up upstream connection clients to the backend
+- then we're gonna spin up tcp servers for all our routes
+
+Once we're done with that, we should be ablt to accept packets
+
 
 
 
