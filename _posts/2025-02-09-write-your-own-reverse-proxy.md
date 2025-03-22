@@ -338,7 +338,7 @@ Here are a few things we need to keep in mind before we proceed
 
 Let's draw it out
 
-<img width="715" alt="image" src="https://github.com/user-attachments/assets/5c33786c-719a-43e7-bbc6-c1a518065ba2" />
+<img width="715" alt="image" src="https://github.com/user-attachments/assets/f80144de-7a28-41be-9dda-addb02e0d5f4" />
 
 We're gonna do this in this order...
 
