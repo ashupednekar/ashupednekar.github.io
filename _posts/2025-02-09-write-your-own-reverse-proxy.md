@@ -340,6 +340,9 @@ Let's draw it out
 
 <img width="715" alt="image" src="https://github.com/user-attachments/assets/f80144de-7a28-41be-9dda-addb02e0d5f4" />
 
+<img width="704" alt="image" src="https://github.com/user-attachments/assets/79eb6cbd-248b-43dc-916f-b610040a012b" />
+
+
 We're gonna do this in this order...
 
 - first, we need to set up upstream connection clients to the backend
