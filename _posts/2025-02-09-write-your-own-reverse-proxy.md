@@ -342,6 +342,9 @@ Let's draw it out
 
 <img width="704" alt="image" src="https://github.com/user-attachments/assets/79eb6cbd-248b-43dc-916f-b610040a012b" />
 
+![image](https://github.com/user-attachments/assets/fc7c574c-c56e-4463-9f01-a125cf56274f)
+
+
 
 We're gonna do this in this order...
 
