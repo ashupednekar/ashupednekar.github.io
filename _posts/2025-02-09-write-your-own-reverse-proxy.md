@@ -566,3 +566,5 @@ Here's a screenshot of `liteginx` in action
 > *If this interests you, and feel like contributing, or just any doubts, reach me on [threads](https://www.threads.com/@ashupednekar) or just raise an issue [here](https://github.com/ashupednekar/liteginx/issues)* 
 
 > *If there's enough interest, I'd be happy to update this blog to get into the implementation details*
+
+Thanks 😊
