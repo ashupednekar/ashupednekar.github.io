@@ -532,16 +532,32 @@ Here's what we are doing in this function
 - A tcp path is a route where the endpoints list is empty, so we don't need this router business
 - Once we have this hashmap, we collect it into a list of routes, which has information of the endpoints and upstream targets
 
-> *If you want to get in the weeds, please go through the repo with your lsp. But this is the general idea*
 
-Now that we have the conf loaded, time to start the servers :)
+### Epilougue
 
-### Downstream Servers
+I don't think there's value in going through the actual code here, the blog's gotten pretty long... but here's the gist
 
-![image](https://github.com/user-attachments/assets/de65811d-cb11-43a2-b042-e2c4b5ae0067)
+- We defined a conf format
+- Wrote a loader to read in the yaml files
+```rust
+Vec<IngressConf>
+```
+- Transformed list of yaml conf to a map of port to endpoint/target tuples
+```rust
+Vec<Routes>
+```
+- start tcp liseneres for each of these ports
+- if the target is of http kind, we route to the right upstream, with path rewrites if needed
+- each of these listeners will handle connection streams, and for each new connection, we create client and target channels and pass them around for communication, look [here](https://github.com/ashupednekar/liteginx/tree/main/src/pkg/server/downstream.rs)
+- the downstream servers are always running
+- when it receives a connection, it's responsble for A. spawn upstream client and B. Send subsequent messages in the TCP stream to said upstream client, look [here](https://github.com/ashupednekar/liteginx/tree/main/src/pkg/server/upstream.rs)
+- when client closes connection, it'll close the upstream connection
+- if path rewrites are needed, it'll essentially just replace the path in the body per http protocol with the necessary path
+- That's the gist
 
 
-### Upstream Servers
-![image](https://github.com/user-attachments/assets/f44e4d98-31e0-4e7e-bd7f-c161152e2257)
+> *If you want to get in the weeds, please go through the [liteginx repo](https://github.com/ashupednekar/liteginx) with your lsp. But this is the general idea*
 
+> *If this interests you, and feel like contributing, or just any doubts, reach me on [threads](https://www.threads.com/@ashupednekar) or just raise an issue [here](https://github.com/ashupednekar/liteginx/issues)* 
 
+> *If there's enough interest, I'd be happy to update this blog to get into the implementation details*
