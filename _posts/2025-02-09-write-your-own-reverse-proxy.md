@@ -167,15 +167,34 @@ Here's a diagram illustrating the responsibilities of each component
 
 ![image](https://github.com/user-attachments/assets/b3b532e8-1cdb-4141-bcc0-08125f328ab4)
 
+> *Traits in rust are interface specs that dictate certain functionality on structs that implement them*
+
+Our downstream servers are responsible to
+- Maintain servers listening at downstream ports
+- When a new client connects, match it with a random(for now), upstream target and maintain TCP connection with it
+- listen to it's channel's receiver and send received messages downstream. We'll call this channel `route` or `client` going forward
+- send messages received from downstream clients to target channels, for upstream servers to pick up
+
+And Upstream listeners
+- Maintain TCP connections with upstream targets
+- listen to target channel receiver and send received messages upstream
+- send messages received from upstream to client channels, for downstream servers to pick up
+
+### Configuration
+
+There's quite a few things we need to know about our target servers and clients before we can serve as a proxy. This is one of the most daunting aspects of operations as a tiny key value in some ingress annotation or modsec config can make or break production. 
+
+Let's take a look at a few example configurations out there before we come up with our own. You can skip this if you've already dealt with those at work. If not, this is crucial to appreciate the subsequent sections
+
+#### nginx
+
+#### httpd
+
+#### ingress
 
 
-- Tcp
-- channels
-- Proxy
-- Attemps xD
 - Config
 - Loader
-- Downstream/Upstream
 - Tests
 - Demo
 - Improvements - minor features
