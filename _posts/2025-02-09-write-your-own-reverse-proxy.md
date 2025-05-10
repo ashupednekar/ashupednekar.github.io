@@ -90,7 +90,7 @@ You can of course look at the plethora of resources out there on go channels and
 
 This is one of those things that fit the meme, *"I didn't do this because it's easy, but cuz I thought it was xD"* 
 
-Trust me, I spent a lot more time on this than I should've. We'll first cover the actual approach I ended up following, I'll try to address a few mistakes I did as well, cuz that's an important part of learning
+Trust me, I spent a lot more time on this than I should've. We'll first cover the actual approach I ended up following, I'll probably try to address a few mistakes I did as well, cuz that's an important part of learning
 
 Cool, let's begin
 
