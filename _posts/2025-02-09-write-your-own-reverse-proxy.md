@@ -165,7 +165,7 @@ This is what our proxy server will iterat through and start TCP servers for. Eac
 
 Here's a diagram illustrating the responsibilities of each component
 
-
+![image](https://github.com/user-attachments/assets/b3b532e8-1cdb-4141-bcc0-08125f328ab4)
 
 
 
