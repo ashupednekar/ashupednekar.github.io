@@ -557,7 +557,8 @@ Here's a screenshot of `liteginx` in action
 
 ![image](https://github.com/user-attachments/assets/dbd3c029-bffd-4497-9c06-d910709b7ae6)
 
-We have two tcp clients, with `telnet`, connected at `4001`, routed to the `go` server running at `4000`We have a few `curl` requests to `/one` and `/two` at `5000` being routed to `/one` and `/` at the `fastapi` server running at `3000`
+- We have two tcp clients, with `telnet`, connected at `4001`, routed to the `go` server running at `4000`
+- And a have a few `curl` requests to `/one` and `/two` at `5000` being routed to `/one` and `/` at the `fastapi` server running at `3000`
 
 
 > *If you want to get in the weeds, please go through the [liteginx repo](https://github.com/ashupednekar/liteginx) with your lsp. But this is the general idea*
