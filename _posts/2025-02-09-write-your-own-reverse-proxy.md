@@ -77,7 +77,7 @@ Cool, so what's making this possible are `channels`. Here's a quick primer on wh
 
 Modern programming languages/ eco-systems come built in with some primitives for dealing with concurrency. When you have a bunch of, let's call them threads doing various things, we need them to be aware of each other for control, and message passing. I'll post a blog post detailing the various approaches across programming languages (at some point 🤞), I'll have chatgpt illustrate it for now
 
-// image
+![image](https://github.com/user-attachments/assets/3c8f98a9-9b53-4479-b318-736075284ac6)
 
 You can of course look at the plethora of resources out there on go channels and tokio. Here's a one liner
 
