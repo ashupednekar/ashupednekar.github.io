@@ -538,6 +538,10 @@ Now that we have the conf loaded, time to start the servers :)
 
 ### Downstream Servers
 
+![image](https://github.com/user-attachments/assets/de65811d-cb11-43a2-b042-e2c4b5ae0067)
+
+
 ### Upstream Servers
+![image](https://github.com/user-attachments/assets/f44e4d98-31e0-4e7e-bd7f-c161152e2257)
 
 
