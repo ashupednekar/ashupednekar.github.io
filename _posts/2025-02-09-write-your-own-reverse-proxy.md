@@ -555,6 +555,8 @@ Vec<Routes>
 - if path rewrites are needed, it'll essentially just replace the path in the body per http protocol with the necessary path
 - That's the gist
 
+![image](https://github.com/user-attachments/assets/dbd3c029-bffd-4497-9c06-d910709b7ae6)
+
 
 > *If you want to get in the weeds, please go through the [liteginx repo](https://github.com/ashupednekar/liteginx) with your lsp. But this is the general idea*
 
