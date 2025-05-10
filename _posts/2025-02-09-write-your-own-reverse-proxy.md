@@ -522,8 +522,6 @@ Don't let the folds and maps scare you, they are just succinct, or honestly... f
 Okay.. so.. say you want to go through a list and create an entirely different list.. kinda like having global variables and pushing elements to it as you go through the elements when certain condition are met
 - `collect` returns a `Vec` of a given type from an iterator
 
-#### Back to the loader
-
 Here's what we are doing in this function
 - We want a `HashMap` of the port to listen on and a tuple of endpoints and targets for each one. once we have this, we can start a tcp server for each element. A hashmap will also take care of, say if you have two different yamls with the same listen ports.. it'll bring them into the grouped conf like httpd/nginx cuz that's what we need in the end to start serving/routing our requests
 - Iterate through a list of configs, remember `IngressConf` ?
@@ -555,7 +553,11 @@ Vec<Routes>
 - if path rewrites are needed, it'll essentially just replace the path in the body per http protocol with the necessary path
 - That's the gist
 
+Here's a screenshot of `liteginx` in action
+
 ![image](https://github.com/user-attachments/assets/dbd3c029-bffd-4497-9c06-d910709b7ae6)
+
+We have two tcp clients, with `telnet`, connected at `4001`, routed to the `go` server running at `4000`We have a few `curl` requests to `/one` and `/two` at `5000` being routed to `/one` and `/` at the `fastapi` server running at `3000`
 
 
 > *If you want to get in the weeds, please go through the [liteginx repo](https://github.com/ashupednekar/liteginx) with your lsp. But this is the general idea*
