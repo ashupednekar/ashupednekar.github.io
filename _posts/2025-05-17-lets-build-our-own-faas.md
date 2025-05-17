@@ -44,7 +44,13 @@ A simple way to put what we're trying to build is a cross language API framework
 
 We could've just started HTTP servers for each of these, sounds simple right? Well... it should be, but some of these languages, especially python would be much harder to work with that way.
 
-Taka a look at [this blog](https://ashupednekar.github.io/)
+Taka a look at [this blog](https://ashupednekar.github.io/posts/lets-solve-the-gunicorn-problem/)
+
+These dynamic languages maybe slow when it comes to handling http requests, especially in a single process, but they do come with the ability to be embeddable. 
+
+Since we are using nats to take care of request reply for us, we don't need http servers for the function runtimes, we could have a rust consumer listening at `reply.>` and start the relevant subscribers. We're gonna embed a python interpretor to call the actual function handlers, same for javascript and lua.
+
+For static langs, we'll just start these processes individually instead of pre-heating a shared runtime
 
 
 
