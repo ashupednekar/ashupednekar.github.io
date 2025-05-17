@@ -24,4 +24,18 @@ It's more of a developer experience thing, which lets users just worry about the
 
 ### Approach
 
+The thing about building frameworks or "magic" tools is the freedom to make certain decisions about how we'd do things
+
+#### What we need
+- Support for popular programing languages, both static and dynamic
+- Users can create functions under projects
+- Dependency management per project for dynamic languages
+- Support for fixtures and tests per function
+- Endpoints with basic load balancing and rate limiting
+
+
+#### Here's what we're gonna do
+
+
+
 
