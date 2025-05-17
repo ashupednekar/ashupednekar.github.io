@@ -4,8 +4,8 @@
 
 This is part of the cloud services series I've been woring on recently. Here are a few other related blogs
 - [Liteginx proxy](https://ashupednekar.github.io/posts/write-your-own-reverse-proxy/)
-- [Lite Web Services]()
-- [Lite Containers]()
+- [Lite Web Services](https://ashupednekar.github.io/)
+- [Lite Containers](https://ashupednekar.github.io/)
 
 ### Intro
 
@@ -44,7 +44,9 @@ A simple way to put what we're trying to build is a cross language API framework
 
 We could've just started HTTP servers for each of these, sounds simple right? Well... it should be, but some of these languages, especially python would be much harder to work with that way.
 
-Taka a look at [this blog]
+Taka a look at [this blog](https://ashupednekar.github.io/)
+
+
 
 
 
