@@ -36,6 +36,6 @@ The thing about building frameworks or "magic" tools is the freedom to make cert
 
 #### Here's what we're gonna do
 
-
+![image](https://github.com/user-attachments/assets/0288ca95-83cd-42d0-afa5-e9a1eeb70fa9)
 
 
