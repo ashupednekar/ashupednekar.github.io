@@ -34,8 +34,18 @@ The thing about building frameworks or "magic" tools is the freedom to make cert
 - Endpoints with basic load balancing and rate limiting
 
 
-#### Here's what we're gonna do
+**Here's what we're gonna do**
 
 ![image](https://github.com/user-attachments/assets/0288ca95-83cd-42d0-afa5-e9a1eeb70fa9)
+
+A simple way to put what we're trying to build is a cross language API framework
+
+#### Why NATS?
+
+We could've just started HTTP servers for each of these, sounds simple right? Well... it should be, but some of these languages, especially python would be much harder to work with that way.
+
+Taka a look at [this blog]
+
+
 
 
