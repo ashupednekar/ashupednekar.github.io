@@ -41,5 +41,4 @@ The idea here is to build something similar to `aws lambda` or gcp's `cloud func
 Most cloud providers provide function as a service solutions, and there are a few open source ones as well
 
 Let's take a look at the most popular one, aws's "lambda"
-
-
+![image](https://github.com/user-attachments/assets/b1c566cb-7ccb-4592-86da-6cbb35016e1e)
