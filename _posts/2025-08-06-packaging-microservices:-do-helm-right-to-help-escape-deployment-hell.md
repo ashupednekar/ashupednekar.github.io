@@ -356,7 +356,8 @@ Simple CRUD on products
 
 This service won't have any http endpoints, instead, will consumer messages producted at `msg.>` and send notifications accordingly, refer [nats docs](https://docs.nats.io/nats-concepts/jetstream/consumers)
 
-
+> **Again, if you are only interested in the packaging aspects, you can skip over this bit and proceed to the next section**
+> For the rest, I've tried to cover at a high level here, you can always look at the examples [here](https://github.com/ashupednekar/ashupednekar.github.io/tree/main/examples/helmblog/services)
 
 
 
