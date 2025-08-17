@@ -54,10 +54,11 @@ here's what we typically need access to to build a modern web service
 - Access to a pubsub system, we'll use nats. We do need to figure out how to abstract it away from the function code though
 - API gateway, we'll use [liteginx](https://github.com/ashupednekar/liteginx) cuz that can spin up additional blogs for features we'd need like rate limiting, authentication, etc
 
-### Architecrture
+### Architecture
 
 Here's the architecture of `litefunctions`, you can clearly both draw parallels with lambda, and appreciate the differences
 
 ![image](https://github.com/user-attachments/assets/95c952b3-2f7b-48e9-ad92-36ba0cd1a1c6)
+
 
 
