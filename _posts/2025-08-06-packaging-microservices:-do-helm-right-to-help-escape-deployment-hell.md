@@ -87,7 +87,7 @@ Things like distroless or `slim` do help tone down the image sizes and security 
 
   <div>
     <img 
-      src="/assets/imgs/helmblog/helmimg2.png"
+      src="/assets/imgs/helmblog/two.png"
       alt="image" 
       width="200" 
       height="300"
@@ -104,13 +104,57 @@ This is good enough, if you have a single deployment target, or if your applicat
 As their site says... it's a package manager for microservices, similar to what `brew`, `yay` or `apt` are on the desktop. Let's build a scenario and do it without helm first, in order to appreciate what we're getting here
 
 #### Scenario
-### scenario set up
-- db, kv, pubsub
-- go services needing envs, each other and essentials
 
+=======
+<p>Cool, so let's take a typical SaaS situation where you'd need the following:</p>
 
-\<img width="839" height="434" alt="image" src="https://github.com/user-attachments/assets/39fcdcdc-3504-496c-a616-0f6b00006c66" />
+<div style="display: flex; align-items: flex-start; gap: 2rem;">
+  <!-- Functional Reqs -->
+  <div style="flex: 1;">
+    <h4>Functional reqs</h4>
+    <ul>
+      <li>email verification</li>
+      <li>jwt authentication</li>
+      <li>proxy level authentication</li>
+      <li>profile pic update</li>
+      <li>authorized users to manage products</li>
+      <li>simple product catalogue</li>
+      <li>user cart / orders</li>
+      <li>scheduled notifications</li>
+    </ul>
+  </div>
 
+  <!-- Non-Functional Reqs -->
+  <div style="flex: 1;">
+    <h4>Non functional reqs</h4>
+    <ul>
+      <li>cloud agnostic</li>
+      <li>distributed DB shipped</li>
+      <li>pub/sub broker shipped</li>
+      <li>stateless applications</li>
+      <li>proxy level auth / authz</li>
+      <li>scalability</li>
+      <li>encrypted secrets</li>
+      <li>easy install</li>
+    </ul>
+  </div>
+
+  <!-- Meme -->
+  <div style="flex-shrink: 0;">
+    <img 
+      src="/assets/imgs/helmblog/three.png"
+      alt="meme: let's overengineer this shit" 
+      width="220"
+    />
+  </div>
+</div>
+
+> Okay, I'm getting ahead of myself 😅, let's not worry about the actual code, just the services and the setups
+
+Here's what the architecture will look like
+<img width="839" height="434" alt="image" src="/assets/imgs/helmblog/four.png" />
+
+Each of out service will be a simple go service with minimal logic, only payload deserialization where needed
 
 
 ### superpowers - lib charts
