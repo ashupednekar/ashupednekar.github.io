@@ -22,7 +22,7 @@ So software was traditionally shipped as executable binaries, be it `exe`s on wi
 
   <div>
     <img 
-      src="https://github.com/user-attachments/assets/a0d6a59d-9c2c-43ca-8b7b-53fef7b2d571" 
+      src="/assets/imgs/helmblog/one.png"
       alt="image" 
       width="200" 
       height="300"
@@ -77,15 +77,18 @@ If most things were self-contained static binaries, a simple scp would’ve been
 Things like distroless or `slim` do help tone down the image sizes and security surface area, to make it feasible to run these services in the cloud
 
 #### Deployment 
+
+      src="https://github.com/user-attachments/assets/a0d6a59d-9c2c-43ca-8b7b-53fef7b2d571" 
 <div style="display: flex; align-items: center;">
   <div style="flex: 1; padding-right: 1rem;">
     <p>
-    Based on the deployment targets, you would start off by creating a <code>deploy repo</code>, which will either house a bunch of <code>docker-compose.yaml</code>'s or if you are not trapped in a lefacy environment, a bunch of kubernetes resources that will then be hooked up to a <code>CD</code> tool that pulls in the desired state when you make changes
+      Based on the deployment targets, you would start off by creating a <code>deploy repo</code>, which will either house a bunch of <code>docker-compose.yaml</code>'s or if you are not trapped in a lefacy environment, a bunch of kubernetes resources that will then be hooked up to a <code>CD</code> tool that pulls in the desired state when you make changes
     </p>
   </div>
+
   <div>
     <img 
-      src="https://github.com/user-attachments/assets/42832c4a-3d08-4309-9010-968ac4ecdb42"
+      src="/assets/imgs/helmblog/helmimg2.png"
       alt="image" 
       width="200" 
       height="300"
