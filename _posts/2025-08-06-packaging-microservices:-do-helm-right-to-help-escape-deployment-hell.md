@@ -109,6 +109,9 @@ As their site says... it's a package manager for microservices, similar to what 
 - go services needing envs, each other and essentials
 
 
+\<img width="839" height="434" alt="image" src="https://github.com/user-attachments/assets/39fcdcdc-3504-496c-a616-0f6b00006c66" />
+
+
 
 ### superpowers - lib charts
 
