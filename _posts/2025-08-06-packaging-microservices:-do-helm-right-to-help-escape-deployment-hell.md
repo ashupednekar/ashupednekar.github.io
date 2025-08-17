@@ -361,11 +361,6 @@ This service won't have any http endpoints, instead, will consumer messages prod
 
 
 
-
-
-
-
-
 ---
 ## Ingress
 
