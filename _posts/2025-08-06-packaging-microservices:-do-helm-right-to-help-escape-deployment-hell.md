@@ -7,6 +7,14 @@ What tools like helm does is help us sort out this mess/ or mesh, if you will...
 
 So software was traditionally shipped as executable binaries, be it `exe`s on windows you installed as a kid, or the elf binaries you `chmod +x` and move to `'/usr/local/bin` once you got cool 😎, they are all the same, with certain exceptions. 
 
+#### Wasn't all sunshines and roses though..
+
+There are two kinds of binaries, generally... statically linked and dynmanically linked. We'll do another article digging through these, here's a meme to give you the general idea
+
+
+
+
+
 what's helm, what it's not... why it's needed
 
 ### scenario set up
