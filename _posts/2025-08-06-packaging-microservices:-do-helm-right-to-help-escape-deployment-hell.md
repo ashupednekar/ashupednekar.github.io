@@ -78,7 +78,6 @@ Things like distroless or `slim` do help tone down the image sizes and security 
 
 #### Deployment 
 
-      src="https://github.com/user-attachments/assets/a0d6a59d-9c2c-43ca-8b7b-53fef7b2d571" 
 <div style="display: flex; align-items: center;">
   <div style="flex: 1; padding-right: 1rem;">
     <p>
