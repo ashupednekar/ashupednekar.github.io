@@ -3,6 +3,7 @@ Alright, let's do this. In this article, I'm gonna walk through what's packaging
 
 What tools like helm does is help us sort out this mess/ or mesh, if you will... and give users or fellow devs a decent experience
 
+
 ## Traditional packaging
 
 So software was traditionally shipped as executable binaries, be it `exe`s on windows you installed as a kid, or the elf binaries you `chmod +x` and move to `'/usr/local/bin` once you got cool 😎, they are all the same, with certain exceptions. 
