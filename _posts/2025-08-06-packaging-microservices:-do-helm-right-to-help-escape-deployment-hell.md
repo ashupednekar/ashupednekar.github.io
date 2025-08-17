@@ -11,6 +11,8 @@ So software was traditionally shipped as executable binaries, be it `exe`s on wi
 
 There are two kinds of binaries, generally... statically linked and dynmanically linked. We'll do another article digging through these, here's a meme to give you the general idea
 
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/a0d6a59d-9c2c-43ca-8b7b-53fef7b2d571" />
+
 
 
 
