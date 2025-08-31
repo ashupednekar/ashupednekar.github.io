@@ -124,7 +124,10 @@ She helps him set it up with a few simple steps, like so...
 ```
 
 Now he can go to github and create a new empty repository for his project
-<img src="/assets/imgs/gitblog/newrepo.png", alt="newrepo">
+<img 
+  src="/assets/imgs/gitblog/newrepo.png"
+  alt="newrepo"
+/>
 
 Add it as remote origin to his local repository
 > Again, would be github in a normal scenario...
