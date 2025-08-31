@@ -252,6 +252,9 @@ Ron, blindly accepts the PR, and merges it into main
     <p>
     Hermioni notices this and decides to have a talk with the two
     </p>
+    <p>
+    What happened here is a typical developer flow most of the time, and it's totally understandable. Ron made a simple request, and harry delivered. It may be totally fine in small teams where there's enough face to face discussions and trust... but does not scale beyond that 
+    </p>
   </div>
 
   <div>
@@ -265,6 +268,91 @@ Ron, blindly accepts the PR, and merges it into main
 </div>
 
 #### PR best practices
+Without getting too preachy about it, here's what entails a good pull request workflow
+
+- It's meant to be a conversation, not a two factor approval process
+- If requirements are unclear, that's fine.. create an issue and maybe link an external document there
+- Once raised, a pull request does not need to be merged immediately, testing and review can and should continue in the feature branch
+- Any fixes or changes to the code may happen in the same tree, or branch into a seperate feature branch if needed
+- Not everything raised in a PR need to be resolved immediately, it can spawn issues and tasks for the future
+- Certain merges would take priority, e.g. if there's a major refactor changing the tree structure and is a dependency for certain features
+- Bottom line, it's not a place to prove others wrong, just to point out things that can be fixed
+- PR's should be marked appropriately if they are intended to stay open for the course of, say a sprint
+- There should ideally be CD in place to spin up ephemeral integration test environments from the feature branch if needed
+- Merging a PR is a not the approver's responsibility alone, but everyone involved in the discussion
+
+Anyway, getting back to RON..
+
+<div style="display: flex; align-items: center;">
+  <div style="flex: 1; padding-right: 1rem;">
+    <p>
+     So Hermioni helped him create an issue with a rough proposal document, there are various terms for these, be it SDS, RFD or enhancement proposals like most open source projects, i.e. KEP, PEP, etc
+    </p>
+    <p>
+There's no need for every project to be organizational and rigid, but there should be some conception of a plan
+    </p>
+  </div>
+
+  <div>
+    <img 
+      src="/assets/imgs/gitblog/plan.jpg"
+      alt="image" 
+      width="200" 
+      height="300"
+    />
+  </div>
+</div>
+
+So ron went ahead and created a github issue with the requirements
+
+<img 
+  src="/assets/imgs/gitblog/ronissue.png"
+  alt="Issue" 
+/>
+
+Hermioni goes through it, and asks Harry for his insights. 
+
+<img 
+  src="/assets/imgs/gitblog/hermioniharryreq.png"
+  alt="Issue" 
+/>
+
+Harry gives it a thought, whips out `excalidraw` and draws a rough sketch describing the following
+- api spec
+- failure points
+- rough data flow/ api logic
+- internal/external dependencies
+
+<img 
+  src="/assets/imgs/gitblog/harrydiagram.png"
+  alt="Issue" 
+/>
+
+Ron then looks at the current codebase and realizes there's no state management, or any scaffolding built right now and needs Harry's help
+
+
+<img 
+  src="/assets/imgs/gitblog/ronharryhelpchat.png"
+  alt="Issue" 
+/>
+
+Note how Ron didn't hesitate to as for help when needed? And since he was clear what Ron needed, Harry took on the task of setting up the package structure, and state management.
+
+Now it's time to code that up...
+
+#### TODO: 
+- PR
+- professor review
+- discussion
+- merge
+- ron PR
+- logic, tests
+- add CI
+- tests pass
+- merge
+- deployment
+
+
 
 
 
