@@ -1,0 +1,283 @@
+## Intro
+
+This article will go through the character development of a typical developer with their arguably the most important workflows - git
+
+<div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 200px;">
+    <p style="text-align: justify; line-height: 1.6; margin: 0;">
+      Meet Ron, he's a 3rd year college student just beginning his journey as a developer. 
+      He's just been assigned to work on a project with peers, and they are supposed to work together on the codebase.
+    </p><br>
+  </div>
+  <div style="flex: 0 0 auto;">
+    <img 
+      src="/assets/imgs/gitblog/innocent.jpg"
+      alt="image" 
+      style="width: min(200px, 35vw); height: 200px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: block;"
+    />
+  </div>
+</div>
+
+
+Let's say he has sensible teachers, and is building the project in go, so he goes and starts a fresh project with a `main.go`
+
+<div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 200px;">
+    <p style="text-align: justify; line-height: 1.6; margin: 0;">
+     He's like, "Okay, we need to write some code, let's download an editor first"... and they go and get <code>vscode</code> or one of it's "ai" flavours off the internet
+    </p>
+  </div>
+  <div>
+    <img 
+      src="/assets/imgs/gitblog/vscodeone.png"
+      alt="image" 
+      style="border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: block;"
+    />
+  </div>
+</div>
+
+
+<div style="display: flex; align-items: center;">
+  <div style="flex: 1; padding-right: 1rem;">
+    <p>
+    Now he asks his friend Harry for help setting up a web server. Harry's a little further along the wizarding world and asks him to set up a github repository. 
+
+Ron goes ahead and does that
+    </p>
+  </div> 
+
+  <div>
+    <img 
+      src="/assets/imgs/gitblog/gitearonsignup.png"
+      alt="image" 
+      width="200" 
+      height="300"
+    />
+  </div>
+ </div>
+
+> note: I'm using gitea here, cuz it's easier to set up multiple accounts locally... just assume it's github
+
+At this point, Ron would be good to push his first commit, but just then, their friend Hermioni steps in and tells him to be a good developer, and sign your commits
+
+She helps him set it up with a few simple steps, like so...
+<div style="display: flex; flex-wrap: wrap;">
+<div style="padding-right: 1rem; min-width: 30%; flex: 1;" >
+ <b>1. Generate an ssh keypair with <code>openssh</code></b>
+ <pre><code>ssh-keygen -t ed25519 -C "ron@mail.com"</code></pre>
+ <b>2. Update your <code>~/.ssh/config</code></b>
+ <pre><code>
+ Host rongit
+   HostName localhost
+   Port 30022
+   User git
+   IdentityFile ~/.ssh/gitblog/ron
+ </code></pre>
+ <b>3. Create a <code>.gitconfig</code> in the home directory</b>
+ <pre><code>[user]
+ name = ron 
+ email = ron@mail.com
+ signingkey = ~/.ssh/gitblog/ron
+[commit]
+ gpgsign = true
+[gpg]
+ format = ssh
+[credential]
+ helper = store
+ </code></pre>
+ </div>
+ <div style="padding-left: 1rem; min-width: 30%; flex: 1;" >
+   <b>4. Add the contents of <code>ron.pub</code> to github</b>
+   <img 
+     src="/assets/imgs/gitblog/ronsshkeyadd1.png"
+     alt="image" 
+     width="400" 
+     height="300"
+   />
+   <img 
+     src="/assets/imgs/gitblog/ronsshkeyadd2.png"
+     alt="image" 
+     width="400" 
+     height="300"
+   />
+   <div style="display: block;">
+     <img 
+       src="/assets/imgs/gitblog/hermionicommitsign.jpg"
+       alt="image" 
+       width="300" 
+       height="900"
+     />
+   </div>
+ </div>
+</div>
+
+> Optional: Here's a neat trick I use to segragate work/personal projects, or act as Ron, Harry in this case.
+>
+> You specify an `includeIf` directive in your git config like so, git automatically switches identities when you are in the specified directory 🪄
+```
+[includeIf "gitdir:~/work/"]
+  path = ~/.gitconfig-work
+[includeIf "gitdir:~/Desktop/ron/"]
+  path = ~/.gitconfig-ron
+[includeIf "gitdir:~/Desktop/harry/"]
+  path = ~/.gitconfig-harry
+```
+
+Now he can go to github and create a new empty repository for his project
+<img src="/assets/imgs/gitblog/newrepo.png">
+
+Add it as remote origin to his local repository
+> Again, would be github in a normal scenario...
+
+```bash
+Desktop/ron/dogapi
+❯ git init
+Initialized empty Git repository in /Users/ashu/Desktop/ron/dogapi/.git/
+dogapi on  main ?
+❯ git remote add origin rongit:ron/dogapi
+```
+
+He's now ready to push his initial commit using vscode's vcs feature
+<div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: nowrap;">
+ <img 
+   src="/assets/imgs/gitblog/vscodegitone.png"
+   alt="commit"
+ />
+ <img 
+   src="/assets/imgs/gitblog/vscodegittwo.png"
+   alt="push"
+ />
+</div>
+
+<img 
+  src="/assets/imgs/gitblog/initialcommit.png"
+  alt="pushed"
+/>
+That's it, his repo is now ready for Harry to add his changes...
+
+
+This is where most folks stop, and if not for friends/co-workers like Hermioni here, people end up skipping the important step of setting up ssh for authentication and commit signing as well, and just make do with PAT tokens, which can either be a pain to refresh every once in a while, or be a clear security risk.
+
+There is a use case for PAT's, but day to day developer workflow is not one, in my opinion... especially if you do not want to, or can't skip the commit signing process
+
+Anyway, let's move on to see what Harry's up to
+> P.S. I ended up decing on the potter references a bit later... my Ron wears specs as well ;)
+
+---
+
+Harry was asked to add an api server for the team, and Ron gave him the repository link [http://localhost:30000/ron/dogapi](https://github.com)
+
+First thing harry does, is fork Ron's repo on github
+<img 
+  src="/assets/imgs/gitblog/harryfork.png"
+  alt="fork"
+/>
+
+He then clones this fork locally, and checks out the necessary branch
+
+```bash
+❯ git clone git@harrygit:harry/dogapi
+Cloning into 'dogapi'...
+remote: Enumerating objects: 7, done.
+remote: Counting objects: 100% (7/7), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 7 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+Receiving objects: 100% (7/7), done.
+Resolving deltas: 100% (1/1), done.
+~/Desktop/harry
+
+❯ cd dogapi
+dogapi on  main
+
+❯ git checkout feat_http_server
+branch 'feat_http_server' set up to track 'origin/feat_http_server'.
+Switched to a new branch 'feat_http_server'
+dogapi on  feat_http_server
+```
+
+Then he quickly whips up a simple http server template for ron. He wasn't told much though, so he adds a single endpoint and doesn't bother with any package structure
+<img 
+  src="/assets/imgs/gitblog/harrycommitone.png"
+  alt="fork"
+/>
+
+> The tool he's using here, might seem overwhelming if you are new, but it's probably one of the easiest tool to use.
+>
+> Here's all you need
+- Install it with `go install github.com/jesseduffield/lazygit@latest`
+- Open it with the command `lazygit`
+- It'll show all unstaged files on the left
+- press `c` to start a commit, put your message
+- press `p` to pull, and `shift-p` to push
+
+Well, it is.. if you understnad git, otherwise the `add` and `sync` UX of vscode or github desktop does seem more appealing. Not diving into the git concepts and commands in much detail here, there are plenty of resources for it out there. We will definitely go through what's necessary
+
+Now Harry needs to send his changes to Ron, he does this by creating a pull request, like so
+<img 
+  src="/assets/imgs/gitblog/harryprstart.png"
+  alt="prstart"
+/>
+
+Note, in this case, the pull/merge request is being raised from `harry:feat_http_server` to `ron:main`. In case of private repos, which are more commonplace at work, the fork step would be replaced with an admin giving Harry access to the repo and the PR being from `feat_http_server` to `main` in the same repository 
+
+<img 
+  src="/assets/imgs/gitblog/harrypr.png"
+  alt="prstart"
+/>
+
+Harry sends this request to Ron: [http://localhost:30000/ron/dogapi/pulls/1](https://github.com)
+
+---
+
+Now, Ron has to check if the PR does what he had asked for. He opens the link and goes through it.
+
+<img 
+  src="/assets/imgs/gitblog/harryprnotitoron.png"
+  alt="prstart"
+/>
+
+Meanwhile Harry realized a bug in his code, and fixes it in the same feature branch, Ron gets notified of the same
+
+<img 
+  src="/assets/imgs/gitblog/ronblindmerge.png"
+  alt="prstart"
+/>
+Ron, blindly accepts the PR, and merges it into main
+
+---
+
+
+<div style="display: flex; align-items: center;">
+  <div style="flex: 1; padding-right: 1rem;">
+    <p>
+    Hermioni notices this and decides to have a talk with the two
+    </p>
+  </div>
+
+  <div>
+    <img 
+      src="/assets/imgs/gitblog/hermioniangry.jpeg"
+      alt="image" 
+      width="200" 
+      height="300"
+    />
+  </div>
+</div>
+
+#### PR best practices
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
