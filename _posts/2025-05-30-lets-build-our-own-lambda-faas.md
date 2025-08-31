@@ -63,5 +63,5 @@ Here's the architecture of `litefunctions`, you can clearly both draw parallels 
 
 ![image](https://github.com/user-attachments/assets/95c952b3-2f7b-48e9-ad92-36ba0cd1a1c6)
 
-
+I really need to continue this blog post
 
