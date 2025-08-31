@@ -162,7 +162,7 @@ This is where most folks stop, and if not for friends/co-workers like Hermioni h
 There is a use case for PAT's, but day to day developer workflow is not one, in my opinion... especially if you do not want to, or can't skip the commit signing process
 
 Anyway, let's move on to see what Harry's up to
-> P.S. I ended up decing on the potter references a bit later... my Ron wears specs as well ;)
+> P.S. I ended up deciding on the potter references a bit later... my Ron wears specs as well ;)
 
 ---
 
