@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"helmblog/services/auth/pkg/db"
 	"net/http"
 	"time"
 
@@ -12,13 +13,13 @@ import (
 )
 
 type AppState struct{
-	DBPool *pgxpool.Pool
+  Adaptors *db.Queries
 	Nc *nats.Conn
 	Stream jetstream.Stream
 }
 
 func NewState() (*AppState, error){
-	ctx, done := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(settings.ConnTimeout)) 
+	ctx, done := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(settings.ConnTimeout))
 	defer done()
 	dbPool, err := pgxpool.New(ctx, settings.DatabaseUrl)
 	if err != nil{
@@ -37,7 +38,7 @@ func NewState() (*AppState, error){
 		Subjects: []string{"msg.>"},
 	}
 	stream, err := js.CreateOrUpdateStream(ctx, streamConfig)
-	return &AppState{DBPool: dbPool, Nc: nc, Stream: stream}, nil
+	return &AppState{Adaptors: db.New(dbPool), Nc: nc, Stream: stream}, nil
 }
 
 type Server struct{

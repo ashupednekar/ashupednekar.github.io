@@ -3,6 +3,7 @@ module helmblog/services/auth
 go 1.24.5
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/nats-io/nats.go v1.44.0
 	go-simpler.org/env v0.12.0

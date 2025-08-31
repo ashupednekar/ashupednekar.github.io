@@ -1,4 +1,7 @@
 ## Let's build our own lambda faas
+
+> Note: **NOT PUBLISHED**
+
 ### Why?
 As usual, as engineers, we build things out from scratch, in order to test our own understanding of something, and discover what we don't know.
 

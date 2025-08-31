@@ -1,5 +1,7 @@
 # Error Handling Across Languages: Lessons from Python, Go, and Rust
 
+> **Note: NOT PUBLISHED**
+
 ## meme, 
 explain why errors are out friend, unline undefined behavior
 
