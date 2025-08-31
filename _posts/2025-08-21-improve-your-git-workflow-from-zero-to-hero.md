@@ -337,7 +337,7 @@ Ron then looks at the current codebase and realizes there's no state management,
   alt="Issue" 
 />
 
-Note how Ron didn't hesitate to as for help when needed? And since he was clear what Ron needed, Harry took on the task of setting up the package structure, and state management.
+Note how Ron didn't hesitate to ask for help when needed? And since he was clear what Ron needed, Harry took on the task of setting up the package structure, and state management.
 
 Now it's time to code that up...
 
