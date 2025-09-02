@@ -485,7 +485,30 @@ They decided on the approach and came to a conclusion to use postgres's gin inde
 
 ---
 
-Ron then went and coded this up alo
+Ron then went and coded this up, while Hermioni worked on the UI in another fork
+
+First, he wrote the sqlc config file, schemq and query.sql and generated the database interface in the adaptors package with `sqlc generate`
+
+<img 
+  src="/assets/imgs/gitblog/roncommit.png"
+  alt="image" 
+/>
+
+> Note: if the specifics of the code here are foreign to you, that's okay... this might as well have been an orm. 
+>
+> Going into the details to keep the scenario real :)
+
+Now he can finally write the handler logic for the API's. Once done with part of the implementation, he starts a draft pull request, by adding a `WIP` prefix marking it as work in progress.
+
+
+<img 
+  src="/assets/imgs/gitblog/ronwippr.png"
+  alt="image" 
+/>
+
+Note how he clearly wrote down the pending items, that he can refer for subsequent work. Having this also lets others weigh in, and contribute to the same PR
+
+
 
 
 
