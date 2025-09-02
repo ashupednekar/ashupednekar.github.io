@@ -368,6 +368,111 @@ Now it's time for Ron to do his part, but he asked hermioni to take a look as we
   alt="Issue" 
 />
 
+---
+
+Ron now needs to create his branch for the business logic, off harry's feature branch. Usually in a private repo, he could just checkout harry's `feat_http_server` branch and `checkout -b` from there. But this is a bit unusual, where he needs to create a branch off harry's fork. He can do so by adding a second origin, like so...
+
+Add harry's fork as a second origin to the local repo
+```bash
+❯ git remote add harryfork rongit:harry/dogapi
+```
+
+Fetch harry's branches
+```bash
+❯ git fetch harryfork
+remote: Enumerating objects: 28, done.
+remote: Counting objects: 100% (28/28), done.
+remote: Compressing objects: 100% (23/23), done.
+remote: Total 26 (delta 8), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (26/26), 5.80 KiB | 848.00 KiB/s, done.
+From rongit:harry/dogapi
+ * [new branch]      feat_http_server -> harryfork/feat_http_server
+ * [new branch]      main             -> harryfork/main
+```
+
+Merge Harry's `feat_http_server` branch into his local `main`
+```bash
+git merge harryfork/feat_http_server
+Updating cc0148c..a9efdc4
+Fast-forward
+ cmd/main.go               | 19 +++++++++++++++++++
+ config.env                |  4 ++++
+ go.mod                    | 16 ++++++++++++++++
+ go.sum                    | 42 ++++++++++++++++++++++++++++++++++++++++++
+ main.go                   | 21 ---------------------
+ pkg/adaptors/mutators.go  |  2 ++
+ pkg/adaptors/selectors.go |  2 ++
+ pkg/conf.go               | 36 ++++++++++++++++++++++++++++++++++++
+ pkg/server/handler.go     | 26 ++++++++++++++++++++++++++
+ pkg/server/state.go       | 40 ++++++++++++++++++++++++++++++++++++++++
+ 10 files changed, 187 insertions(+), 21 deletions(-)
+ create mode 100644 cmd/main.go
+ create mode 100644 config.env
+ create mode 100644 go.sum
+ delete mode 100644 main.go
+ create mode 100644 pkg/adaptors/mutators.go
+ create mode 100644 pkg/adaptors/selectors.go
+ create mode 100644 pkg/conf.go
+ create mode 100644 pkg/server/handler.go
+ create mode 100644 pkg/server/state.go
+```
+
+Create a new branch for the business logic and push to origin
+```bash
+❯ git checkout -b feat_db_adaptors
+Switched to a new branch 'feat_db_adaptors'
+dogapi on  feat_db_adaptors $
+❯ git push --set-upstream origin feat_db_adaptors
+Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+remote:
+remote: Create a new pull request for 'feat_db_adaptors':
+remote:   http://git.example.com/ron/dogapi/pulls/new/feat_db_adaptors
+remote:
+remote: . Processing 1 references
+remote: Processed 1 references in total
+To rongit:ron/dogapi
+ * [new branch]      feat_db_adaptors -> feat_db_adaptors
+branch 'feat_db_adaptors' set up to track 'origin/feat_db_adaptors'.
+```
+> Notice how there was no hurry to merge the existing PR? 
+
+Ron can proceed with his changes while Harry and others work on unit tests and other things parallely. Git it really amazing for asyncronous workflows like this, but most people just avoid it and rely on slack channels or word of mouth syncronous operations... no better than google drive
+
+While Ron and Harry are busy building the service, Hermioni can parallely start a new flow for the deployment and CI/CD part
+
+> Note: day to day git workflows are usually more straightforward than this, e.g. deployment wouldn't start until initial merge, but I'm trying to cover as much base as possible
+
+She can follow the same steps that Ron did, or just fork Ron's branch...
+<img 
+  src="/assets/imgs/gitblog/hermionifork.png"
+  alt="image" 
+/>
+
+She quickly added template github actions and dockerized the service
+<img 
+  src="/assets/imgs/gitblog/actionscommit.png"
+  alt="image" 
+/>
+
+Instead of lumping a full change into a single commit, sperating files or hunks into individual commits should be considered when appropriate
+
+<img 
+  src="/assets/imgs/gitblog/Dockerfilecommit.png"
+  alt="image" 
+/>
+
+Then she raised the PR to Ron's feature branch
+<img 
+  src="/assets/imgs/gitblog/hermioniprraised.png"
+  alt="image" 
+/>
+
+
+
+
+
+
+
 
 
 
