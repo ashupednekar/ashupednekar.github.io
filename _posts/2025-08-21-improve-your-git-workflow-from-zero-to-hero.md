@@ -340,11 +340,39 @@ Ron then looks at the current codebase and realizes there's no state management,
 Note how Ron didn't hesitate to ask for help when needed? And since he was clear what Ron needed, Harry took on the task of setting up the package structure, and state management.
 
 Now it's time to code that up...
+Harry started with a package structure, and used a few dependencies to set up settings and minio connector, and defined the handlers as planned. Then he goes and raises his PR
+
+<img 
+  src="/assets/imgs/gitblog/harryprone.png"
+  alt="Issue" 
+/>
+
+He needs to add a description of the changes in the pull request
+
+<img 
+  src="/assets/imgs/gitblog/harryprtwo.png"
+  alt="Issue" 
+/>
+
+For the minio connector, he was stumped between using the s3 connector from aws and the client package from minio, cuz he had better experience from the aws one in other languages, in the past. He left a comment stating the same and why he chose to go with the latter
+
+<img 
+  src="/assets/imgs/gitblog/harrydepcommentone.png"
+  alt="Issue" 
+/>
+
+Now it's time for Ron to do his part, but he asked hermioni to take a look as well. They then decided to pull in the professor for a second opinion
+
+<img 
+  src="/assets/imgs/gitblog/profone.png"
+  alt="Issue" 
+/>
+
+
+
+
 
 #### TODO: 
-- PR
-- professor review
-- discussion
 - merge
 - ron PR
 - logic, tests
