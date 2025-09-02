@@ -467,6 +467,28 @@ Then she raised the PR to Ron's feature branch
   alt="image" 
 />
 
+---
+Meanwhile, Ron created a new RFD issue to discuss the full text search approach
+<img 
+  src="/assets/imgs/gitblog/rfd2.png"
+  alt="image" 
+/>
+
+The professor weighed in as well
+
+<img 
+  src="/assets/imgs/gitblog/rfd2done.png"
+  alt="image" 
+/>
+
+They decided on the approach and came to a conclusion to use postgres's gin index and full text search capabilities
+
+---
+
+Ron then went and coded this up alo
+
+
+
 
 
 
@@ -483,6 +505,7 @@ Then she raised the PR to Ron's feature branch
 - logic, tests
 - add CI
 - tests pass
+- conflicts..
 - merge
 - deployment
 
