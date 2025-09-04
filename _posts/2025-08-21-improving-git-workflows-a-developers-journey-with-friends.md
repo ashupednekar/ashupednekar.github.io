@@ -1,6 +1,6 @@
 ### Intro, Ron's assigned a project
 
-This article will go through the character development of a typical developer with their arguably the most important workflows - git
+This article will go through the character development of a typical developer with their arguably most important workflows - git
 
 <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 200px;">
