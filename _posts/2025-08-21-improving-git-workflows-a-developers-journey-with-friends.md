@@ -1,4 +1,4 @@
-### Intro, Ron's assined a project
+### Intro, Ron's assigned a project
 
 This article will go through the character development of a typical developer with their arguably the most important workflows - git
 
