@@ -508,44 +508,65 @@ Now he can finally write the handler logic for the API's. Once done with part of
 
 Note how he clearly wrote down the pending items, that he can refer for subsequent work. Having this also lets others weigh in, and contribute to the same PR
 
+Meanwhile, they can peer review each the open PR's and merge accordingly
+
+<img 
+  src="/assets/imgs/gitblog/prmergeone.png"
+  alt="image" 
+/>
+<img 
+  src="/assets/imgs/gitblog/prmergetwo.png"
+  alt="image" 
+/>
+
+See how things can happen asyncronously here... Though for a small team like this one, it would have made more sense to merge certain stuff sequentially, e.g. the `ci/cd` PR, but in a larger team, decoupling dependencies definitely helps in the long run, though at the end of the day, it's still up to developer/team to decide how they want to do things
+
+<img 
+  src="/assets/imgs/gitblog/reviewone.png"
+  alt="image" 
+/>
+Meanwhile, harry reviewed ron's code and left a few comments. 
+<img 
+  src="/assets/imgs/gitblog/reviewtwo.png"
+  alt="image" 
+/>
+Ron accepted the ones immediately actionable, and maked the less urgent ones for future work with a new issue for tracking purposes
+
+---
+
+On the other hand, Hermioni kicked off a frontend screen as per the spec in a seperate feature branch
+<img 
+  src="/assets/imgs/gitblog/frontendfork.png"
+  alt="image" 
+/>
+She chose to go with a static html with `alpineJS` for rendering so that they don't need to have a seperate frontend container with something like react
+<img 
+  src="/assets/imgs/gitblog/frontendcommit.png"
+  alt="image" 
+/>
+There was a mismatch in the api functionality since ron is not yet done updating it to the new spec, so she left a TODO comment for ron and raised a PR
+<img 
+  src="/assets/imgs/gitblog/frontendpr.png"
+  alt="image" 
+/>
+
+The prof pointed out a potential issue with the static files approach, created an issue for the same
 
 
+<img 
+  src="/assets/imgs/gitblog/frontendreview.png"
+  alt="image" 
+/>
 
+They then went on to do this for a few weeks and got the site working, complete with github actions for tests and other CI and deployed it to a small VPS, I leave that for you to do... or maybe a future blog 🙃
 
+### Conclusion
 
+At the end of the day, git isn’t just about pushing and pulling code — it’s about collaboration.
+Ron, Harry, and Hermioni could’ve just hacked things together on one laptop, but by setting up proper repos, PRs, issues, and reviews, they ended up building something in a way that actually scales.
 
+Sure, you don’t always need every best practice for small projects with friends — sometimes it’s fine to merge quick fixes and move on. But as soon as your codebase grows, or more people get involved, you’ll thank yourself for having clean workflows, signed commits, and a habit of writing down your thoughts in issues and PRs.
 
+The important part? Git lets you work asynchronously, without blocking each other. Good practices around commits, branches, and reviews don’t slow you down — they keep the team sane, the history clean, and the project maintainable.
 
-
-
-
-
-
-
-#### TODO: 
-- merge
-- ron PR
-- logic, tests
-- add CI
-- tests pass
-- conflicts..
-- merge
-- deployment
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+So whether you’re Ron starting out, Harry adding features, or Hermioni keeping things structured, the magic really comes from using git as more than just a backup tool — but as the backbone of teamwork.
