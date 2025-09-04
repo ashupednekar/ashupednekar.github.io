@@ -19,7 +19,7 @@ This article will go through the character development of a typical developer wi
 </div>
 
 
-Let's say he has sensible teachers, and is building the project in go, so he goes and starts a fresh project with a `main.go`
+Let's say he has sensible teachers, and is building the project in go. So he goes and starts a fresh project with a `main.go`
 
 <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 200px;">
