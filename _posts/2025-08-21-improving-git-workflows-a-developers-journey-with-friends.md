@@ -544,7 +544,7 @@ Meanwhile, harry reviewed ron's code and left a few comments.
   src="/assets/imgs/gitblog/reviewtwo.png"
   alt="image" 
 />
-Ron accepted the ones immediately actionable, and maked the less urgent ones for future work with a new issue for tracking purposes
+Ron accepted the ones immediately actionable, and marked the less urgent ones for future work with a new issue for tracking purposes
 
 ---
 
