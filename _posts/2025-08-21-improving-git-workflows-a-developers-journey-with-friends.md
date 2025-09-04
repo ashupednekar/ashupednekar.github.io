@@ -562,6 +562,8 @@ They then went on to do this for a few weeks and got the site working, complete 
 
 ### Conclusion
 
+> P.S. There are a plethora of git workflows like rebase over merge, git bisect, etc that can improve your life, this article turned out to focus more on the collaboration and process aspects, `TODO:` I'll get to that in a future blog, mostly... 😉
+
 At the end of the day, git isn’t just about pushing and pulling code — it’s about collaboration.
 Ron, Harry, and Hermioni could’ve just hacked things together on one laptop, but by setting up proper repos, PRs, issues, and reviews, they ended up building something in a way that actually scales.
 
