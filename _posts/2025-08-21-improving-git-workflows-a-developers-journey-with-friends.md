@@ -1,4 +1,4 @@
-## Intro
+### Intro, Ron's assined a project
 
 This article will go through the character development of a typical developer with their arguably the most important workflows - git
 
@@ -37,6 +37,8 @@ Let's say he has sensible teachers, and is building the project in go, so he goe
 </div>
 
 
+### He needs a collaborator
+
 <div style="display: flex; align-items: center;">
   <div style="flex: 1; padding-right: 1rem;">
     <p>
@@ -57,6 +59,9 @@ Ron goes ahead and does that
  </div>
 
 > note: I'm using gitea here, cuz it's easier to set up multiple accounts locally... just assume it's github
+
+
+### Configuring git
 
 At this point, Ron would be good to push his first commit, but just then, their friend Hermioni steps in and tells him to be a good developer, and sign your commits
 
@@ -166,6 +171,8 @@ Anyway, let's move on to see what Harry's up to
 
 ---
 
+### Harry's fork
+
 Harry was asked to add an api server for the team, and Ron gave him the repository link [http://localhost:30000/ron/dogapi](https://github.com)
 
 First thing harry does, is fork Ron's repo on github
@@ -228,7 +235,8 @@ Note, in this case, the pull/merge request is being raised from `harry:feat_http
 
 Harry sends this request to Ron: [http://localhost:30000/ron/dogapi/pulls/1](https://github.com)
 
----
+
+### PR Reviews
 
 Now, Ron has to check if the PR does what he had asked for. He opens the link and goes through it.
 
@@ -245,8 +253,7 @@ Meanwhile Harry realized a bug in his code, and fixes it in the same feature bra
 />
 Ron, blindly accepts the PR, and merges it into main
 
----
-
+### And there we go again...
 
 <div style="display: flex; align-items: center;">
   <div style="flex: 1; padding-right: 1rem;">
@@ -281,6 +288,8 @@ Without getting too preachy about it, here's what entails a good pull request wo
 - PR's should be marked appropriately if they are intended to stay open for the course of, say a sprint
 - There should ideally be CD in place to spin up ephemeral integration test environments from the feature branch if needed
 - Merging a PR is a not the approver's responsibility alone, but everyone involved in the discussion
+
+### The planning phase
 
 Anyway, getting back to RON..
 
@@ -331,11 +340,12 @@ Harry gives it a thought, whips out `excalidraw` and draws a rough sketch descri
 
 Ron then looks at the current codebase and realizes there's no state management, or any scaffolding built right now and needs Harry's help
 
-
 <img 
   src="/assets/imgs/gitblog/ronharryhelpchat.png"
   alt="Issue" 
 />
+
+### Task distribution and collaboration
 
 Note how Ron didn't hesitate to ask for help when needed? And since he was clear what Ron needed, Harry took on the task of setting up the package structure, and state management.
 
@@ -368,7 +378,7 @@ Now it's time for Ron to do his part, but he asked hermioni to take a look as we
   alt="Issue" 
 />
 
----
+### Don't hurry to merge PRs
 
 Ron now needs to create his branch for the business logic, off harry's feature branch. Usually in a private repo, he could just checkout harry's `feat_http_server` branch and `checkout -b` from there. But this is a bit unusual, where he needs to create a branch off harry's fork. He can do so by adding a second origin, like so...
 
@@ -438,6 +448,8 @@ branch 'feat_db_adaptors' set up to track 'origin/feat_db_adaptors'.
 
 Ron can proceed with his changes while Harry and others work on unit tests and other things parallely. Git it really amazing for asyncronous workflows like this, but most people just avoid it and rely on slack channels or word of mouth syncronous operations... no better than google drive
 
+### Asyncronous work
+
 While Ron and Harry are busy building the service, Hermioni can parallely start a new flow for the deployment and CI/CD part
 
 > Note: day to day git workflows are usually more straightforward than this, e.g. deployment wouldn't start until initial merge, but I'm trying to cover as much base as possible
@@ -473,6 +485,8 @@ Meanwhile, Ron created a new RFD issue to discuss the full text search approach
   src="/assets/imgs/gitblog/rfd2.png"
   alt="image" 
 />
+
+### Non code contributions, triaging
 
 The professor weighed in as well
 
