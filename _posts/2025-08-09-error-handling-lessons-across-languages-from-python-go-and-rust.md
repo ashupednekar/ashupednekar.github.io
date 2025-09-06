@@ -1,5 +1,3 @@
-# Error Handling Across Languages: Lessons from Python, Go, and Rust
-
 > **Note: NOT PUBLISHED**
 
 ## Preface
@@ -43,16 +41,24 @@ You read that right, errors are one of the best aspects of programming. Folks us
   </div>
 </div>
 
-> What we want to eliminate is wrong software behavior, one way to do that is to have proper error handling
+> What we want to eliminate is undefined software behavior, one way to do that is to have proper error handling
 
-I know this sounds all up in the air right now, we'll make it concrete with proper examples soon
+I know this sounds all up in the air right now, bear with me, setting up the example now
 
 ### Example scenario
 
-Let's take a 
+Let's take a typical web dev scenario here, building a backend API that does the following
+- fetch exchange rates from `currencyapi.com`
+- cache the results for some time
+- convert given amount to target currency
+- log the conversion request to DB
 
-## meme, 
-explain why errors are out friend, unline undefined behavior
+Cool
+
+### Code it up
+
+This is a simplified scenario you would be dealing with... Let's quickly code it up in python
+
 
 ### typical errors
 -- memory errors
