@@ -309,9 +309,45 @@ This will just result in a `JsonDecodeError` or a `KeyError`... having another m
 > This articls is not about convincing folks to have proper types... but it's important to understand that it's not a thing that's `nice to do`, having compile time checks can let you model your application's spec properly, and takes off a lot of the cognitive load... especially if you're using a proper static type system
 
 #### Logic bugs
-This might be surprisinj
+Unintuitively, logic bugs are relatively very rare, because most of the applications we write nowadays is mostly gluing things around, instead of specialized logic... 
+
+There are definitely instances where these could happen,
+e.g.
+- low level networking systems like proxies, databases
+- business systems like financial accounting, charges 
+- notification systems, etc
+
+But there's a twist...
+
+There could be logic errors in dependencies and other low level systems we use, that could lead to errors we need to handle. More about that in the next section
 
 #### environmental bugs 
+Much like a car has to interact with the external world, and can be drastically affected by various factors like:
+- potholes/swamps
+- lane markers
+- traffic signs
+- other cars
+- traffic
+- fuel
+
+our application containers are also affected by stuff like:
+- available resources
+- environment variables
+- other processes
+- kernal interrupts
+
+and so on...
+
+And each of these systems need to handle and propagate their errors to us in a meaninful way, so we can handle them accordingly
+
+and so on...
+
+And each of these systems need to handle and propagate their errors to us in a meaninful way, so we can handle them accordingly...
+
+Having a few cars to follow makes it easier in terms of navigation, much like delegating common yet complex tasks to other services, e.g. redis, queues etc make it easier to run our applications, but that definitely increases the failure points and the error surface area we need to cover
+
+> That's an argument for a different blog post, framework vs minimal dependencies
+
 - misconfigurations
 - resource exhaustion
 -- dependency errors
